@@ -6,6 +6,8 @@ const sendEmail = require('_helpers/send-email');
 const db = require('_helpers/db');
 const Role = require('_helpers/role');
 
+const profileService = require('profile/profile.service');
+
 module.exports = {
     authenticate,
     refreshToken,
@@ -19,7 +21,9 @@ module.exports = {
     getById,
     create,
     update,
-    delete: _delete
+    delete: _delete,
+    // helpers
+    basicDetails,
 };
 
 async function authenticate({ email, password, ipAddress }) {
@@ -96,6 +100,8 @@ async function register(params, origin) {
 
     // save account
     await account.save();
+
+    await profileService.createProfile(account.id);
 
     // send email
     await sendVerificationEmail(account, origin);
