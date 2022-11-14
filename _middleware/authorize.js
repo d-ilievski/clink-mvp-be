@@ -4,7 +4,7 @@ const db = require("_helpers/db");
 
 module.exports = authorize;
 
-function authorize(roles = [], optionally = false) {
+function authorize(roles = []) {
   // roles param can be a single role string (e.g. Role.User or 'User')
   // or an array of roles (e.g. [Role.Admin, Role.User] or ['Admin', 'User'])
   if (typeof roles === "string") {
@@ -22,9 +22,7 @@ function authorize(roles = [], optionally = false) {
 
       if (!account || (roles.length && !roles.includes(account.role))) {
         // account no longer exists or role not authorized
-        if (optionally) {
-          next();
-        } else return res.status(401).json({ message: "Unauthorized" });
+        return res.status(401).json({ message: "Unauthorized" });
       }
 
       // authentication and authorization successful

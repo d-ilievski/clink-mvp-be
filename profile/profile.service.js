@@ -1,4 +1,5 @@
-﻿const db = require("_helpers/db");
+﻿const e = require("express");
+const db = require("_helpers/db");
 
 module.exports = {
   getPublicByAccountId,
@@ -40,8 +41,14 @@ async function createProfile(accountId) {
   //   throw "Account not found.";
   // }
 
+  const account = await db.Account.findById(accountId);
+
+  if (!account) {
+    throw "Account not found.";
+  }
+
   const initialValues = {
-    account: accountId,
+    account: account._id,
     handle: "",
     title: "",
     description: "",
@@ -101,17 +108,64 @@ async function deleteLink(accountId, params) {
   return deleteResult;
 }
 
-async function connectProfile(profileId, requesterUserId) {
-  const userId = await getUserIdByProfileId(profileId);
+async function connectProfile(profileId, requesterAccountId) {
+  const accountId = await getAccountIdByProfileId(profileId);
+  let connected = false;
 
-  if (requesterUserId) {
-    // match
+  if (requesterAccountId && requesterAccountId !== accountId) {
+    const requesterProfile = await getProfileByAccountId(requesterAccountId);
+    const requesterConnecton = requesterProfile.connections.find(
+      (connection) => connection.profile.id === profileId
+    );
+
+    const userProfile = await getProfileById(profileId);
+    const userConnection = userProfile.connections.find(
+      (connection) => connection.profile.id === requesterProfile.id
+    );
+
+    if (requesterConnecton) {
+      // they connected in the past, update date
+      requesterConnecton.date = Date.now();
+    } else {
+      // requester hasn't connected in the past
+      requesterProfile.connections.push({ profile: profileId });
+    }
+
+    if (userConnection) {
+      // they connected in the past, update date
+      userConnection.date = Date.now();
+    } else {
+      // the user hasn't connected in the past
+      userProfile.connections.push({ profile: requesterProfile.id });
+    }
+
+    await requesterProfile.save();
+    await userProfile.save();
+    connected = true;
   }
 
-  return userId;
+  return {
+    accountId,
+    requesterAccountId: requesterAccountId || "Guest",
+    connected,
+  };
 }
 
 // DB Queries
+
+async function getProfileById(id) {
+  if (!db.isValidId(id)) throw "Profile not found";
+  const profile = await db.Profile.findById(id).populate({
+    path: "connections",
+    populate: {
+      path: "profile",
+      model: "Profile",
+    },
+  });
+  if (!profile) throw "Profile not found";
+  return profile;
+}
+
 async function getProfileByAccountId(accountId) {
   if (!db.isValidId(accountId)) throw "Profile not found";
   const profile = await db.Profile.findOne({ account: accountId })
@@ -120,6 +174,13 @@ async function getProfileByAccountId(accountId) {
     })
     .populate({
       path: "links",
+    })
+    .populate({
+      path: "connections",
+      populate: {
+        path: "profile",
+        model: "Profile",
+      },
     });
 
   if (!profile) throw "Profile not found";
@@ -133,20 +194,15 @@ async function getLinkById(id) {
   return link;
 }
 
-async function getUserIdByProfileId(profileId) {
+async function getAccountIdByProfileId(profileId) {
   if (!db.isValidId(profileId)) throw "User not found";
-  const profile = await db.Profile.findById(profileId);
+  const profile = await db.Profile.findById(profileId).populate({
+    path: "account",
+  });
 
-  if (!profile) throw "Profile not found";
-  return profile.account;
+  if (!profile) throw "Account not found";
+  return profile.account.id; // id
 }
-
-// async function getProfileById(id) {
-//   if (!db.isValidId(id)) throw "Profile not found";
-//   const profile = await db.Profile.findById(id);
-//   if (!profile) throw "Profile not found";
-//   return profile;
-// }
 
 // Transformers
 function publicProfile(profile) {
@@ -172,7 +228,9 @@ function publicProfile(profile) {
 }
 
 function privateProfile(profile) {
-  const { id, account, handle, title, description, links } = profile;
+  const { id, account, handle, title, description, links, connections } =
+    profile;
+
   const {
     id: accountId,
     title: userTitle,
@@ -180,12 +238,21 @@ function privateProfile(profile) {
     lastName,
     email,
   } = account;
+
+  const connectionsTransformed = connections.map(({ profile, date }) => ({
+    firstName: profile.firstName,
+    lastName: profile.lastName,
+    title: profile.title,
+    date,
+  }));
+
   return {
     id,
     handle,
     title,
     description,
     links,
+    connections: connectionsTransformed,
     account: {
       id: accountId,
       title: userTitle,

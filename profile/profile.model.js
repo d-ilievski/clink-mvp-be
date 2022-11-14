@@ -7,7 +7,12 @@ const schema = new Schema({
   title: { type: String, required: false },
   description: { type: String, required: false },
   links: [{ type: Schema.Types.ObjectId, ref: "Link" }],
-  // connections: [{ type: Schema.Types.ObjectId, ref: "Account" }],
+  connections: [
+    {
+      profile: { type: Schema.Types.ObjectId, ref: "Profile" },
+      date: { type: Date, default: Date.now },
+    },
+  ],
   created: { type: Date, default: Date.now },
   updated: Date,
 });

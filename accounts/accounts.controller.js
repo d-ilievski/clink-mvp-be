@@ -7,7 +7,7 @@ const Role = require('_helpers/role');
 const accountService = require('./account.service');
 
 // routes
-router.post('/authenticate', authenticateSchema, authenticate);
+router.post('/authenticate', authenticateSchema, authenticate); // TODO Make email case insensitive
 router.post('/refresh-token', refreshToken);
 router.post('/revoke-token', authorize(), revokeTokenSchema, revokeToken);
 router.post('/register', registerSchema, register);

@@ -6,6 +6,8 @@ const authorize = require("_middleware/authorize");
 const Role = require("_helpers/role");
 const profileService = require("./profile.service");
 
+const optionallyAuthorize = require("../_middleware/optionallyAuthorize");
+
 // routes
 router.get("/:id", getPublicByAccountId);
 
@@ -18,10 +20,11 @@ router.delete("/link", authorize(), deleteLinkSchema, deleteLink);
 
 // Will accept a profile id and connect the requester with that profile owner.
 // Accessed through scanning the tag, should return the account id of the connection for redirect to the profile
-router.get("/connect/:profileId", authorize(undefined, true), connectProfile); // optional auth
+router.get("/connect/:profileId", optionallyAuthorize(), connectProfile); // optional auth
 
 module.exports = router;
 
+// TODO Rename to getPublicProfile
 function getPublicByAccountId(req, res, next) {
   profileService
     .getPublicByAccountId(req.params.id)
@@ -29,17 +32,15 @@ function getPublicByAccountId(req, res, next) {
     .catch(next);
 }
 
+// TODO Rename to getPrivateProfile
 function getByAccountId(req, res, next) {
-  if (req.params.id !== req.user.id && req.user.role !== Role.Admin) {
-    return res.status(401).json({ message: "Unauthorized" });
-  }
-
   profileService
     .getByAccountId(req.user.id)
     .then((profile) => (profile ? res.json(profile) : res.sendStatus(404)))
     .catch(next);
 }
 
+// TODO Rename to updateProfileSchema
 function updateSchema(req, res, next) {
   const schemaRules = {
     handle: Joi.string().empty(""),
@@ -139,8 +140,11 @@ function deleteLink(req, res, next) {
 }
 
 function connectProfile(req, res, next) {
+  const requesterAccountId = req.user ? req.user.id : undefined;
   profileService
-    .connectProfile(req.params.profileId, req.user.id)
-    .then((userId) => (userId ? res.json({ userId }) : res.sendStatus(404)))
+    .connectProfile(req.params.profileId, requesterAccountId)
+    .then((connection) =>
+      connection ? res.json({ connection }) : res.sendStatus(404)
+    )
     .catch(next);
 }
