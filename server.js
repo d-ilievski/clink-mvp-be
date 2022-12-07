@@ -31,7 +31,8 @@ app.use("/api-docs", require("_helpers/swagger"));
 app.use(errorHandler);
 
 app.use(express.static("build"));
-app.get("/", function (req, res) {
+
+app.get("*", function (req, res) {
   res.sendFile(path.join(__dirname, "build", "index.html"));
 });
 
