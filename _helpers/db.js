@@ -11,7 +11,7 @@ const connectDB = async () => {
       useUnifiedTopology: true,
       useFindAndModify: false,
     };
-    const conn = mongoose.connect(
+    const conn = await mongoose.connect(
       process.env.MONGODB_URI || config.connectionString,
       connectionOptions
     );
