@@ -1,0 +1,25 @@
+const LinkType = Object.freeze({
+  CustomLink: "custom-link",
+  Website: "website",
+  Facebook: "facebook",
+  YouTube: "youtube",
+  Instagram: "instagram",
+  WeChat: "wechat",
+  TikTok: "tiktok",
+  Snapchat: "snapchat",
+  Pinterest: "pinterest",
+  Twitter: "twitter",
+  LinkedIn: "linkedin",
+  Reddit: "reddit",
+  StackOverflow: "stackoverflow",
+  GitHub: "github",
+  Tumblr: "tumblr",
+  DeviantArt: "deviantart",
+  Indeed: "indeed",
+  Xing: "xing",
+  Telegram: "telegram",
+  WhatsApp: "whatsapp",
+  Mobile: "mobile",
+});
+
+module.exports = LinkType;

@@ -180,6 +180,10 @@ async function getProfileByAccountId(accountId) {
       populate: {
         path: "profile",
         model: "Profile",
+        populate: {
+          path: "account",
+          model: "Account",
+        },
       },
     });
 
@@ -239,9 +243,10 @@ function privateProfile(profile) {
     email,
   } = account;
 
-  const connectionsTransformed = connections.map(({ profile, date }) => ({
-    firstName: profile.firstName,
-    lastName: profile.lastName,
+  const connectionsTransformed = connections.map(({ profile, date, id }) => ({
+    id,
+    firstName: profile.account.firstName,
+    lastName: profile.account.lastName,
     title: profile.title,
     date,
   }));
