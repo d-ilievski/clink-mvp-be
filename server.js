@@ -6,6 +6,7 @@ const cookieParser = require("cookie-parser");
 const cors = require("cors");
 const errorHandler = require("_middleware/error-handler");
 const path = require("path");
+const { mongooseClient } = require("_helpers/db");
 
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
@@ -35,8 +36,15 @@ app.get("/", function (req, res) {
 });
 
 // start server
-const port =
-  process.env.NODE_ENV === "production" ? process.env.PORT || 80 : 4000;
-app.listen(port, () => {
-  console.log("Server listening on port " + port);
+mongooseClient.connect((err) => {
+  if (err) {
+    console.error(err);
+    return false;
+  }
+
+  const port =
+    process.env.NODE_ENV === "production" ? process.env.PORT || 80 : 4000;
+  app.listen(port, () => {
+    console.log("Server listening on port " + port);
+  });
 });
