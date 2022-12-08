@@ -245,6 +245,7 @@ function privateProfile(profile) {
 
   const connectionsTransformed = connections.map(({ profile, date, id }) => ({
     id,
+    accountId: profile.account.id,
     firstName: profile.account.firstName,
     lastName: profile.account.lastName,
     title: profile.title,
