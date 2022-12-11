@@ -1,6 +1,8 @@
-const { secret } = require("config.json");
+const config = require("config.json");
 const db = require("_helpers/db");
 const jwt = require("jsonwebtoken");
+
+const secret = process.env.JWT_SECRET || config.secret;
 
 module.exports = optionallyAuthorize;
 

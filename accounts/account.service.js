@@ -8,6 +8,8 @@ const Role = require("_helpers/role");
 
 const profileService = require("profile/profile.service");
 
+const secret = process.env.JWT_SECRET || config.secret;
+
 module.exports = {
   authenticate,
   refreshToken,
@@ -243,7 +245,7 @@ function hash(password) {
 
 function generateJwtToken(account) {
   // create a jwt token containing the account id that expires in 15 minutes
-  return jwt.sign({ sub: account.id, id: account.id }, config.secret, {
+  return jwt.sign({ sub: account.id, id: account.id }, secret, {
     expiresIn: "15m",
   });
 }
