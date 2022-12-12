@@ -33,7 +33,7 @@ async function authenticate({ email, password, ipAddress }) {
 
   if (
     !account ||
-    !account.isVerified ||
+    // !account.isVerified ||
     !bcrypt.compareSync(password, account.passwordHash)
   ) {
     throw "Email or password is incorrect";
@@ -86,7 +86,7 @@ async function revokeToken({ token, ipAddress }) {
   await refreshToken.save();
 }
 
-async function register(params, origin) {
+async function register(params, origin, ipAddress) {
   // validate
   if (await db.Account.findOne({ email: params.email })) {
     // send already registered error in email to prevent account enumeration
@@ -111,6 +111,20 @@ async function register(params, origin) {
 
   // send email
   await sendVerificationEmail(account, origin, profile);
+
+  // authentication successful so generate jwt and refresh tokens
+  const jwtToken = generateJwtToken(account);
+  const refreshToken = generateRefreshToken(account, ipAddress);
+
+  // save refresh token
+  await refreshToken.save();
+
+  // return basic details and tokens
+  return {
+    ...basicDetails(account),
+    jwtToken,
+    refreshToken: refreshToken.token,
+  };
 }
 
 async function verifyEmail({ token }) {
