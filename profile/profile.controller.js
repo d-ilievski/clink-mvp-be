@@ -43,9 +43,7 @@ function getByAccountId(req, res, next) {
 // TODO Rename to updateProfileSchema
 function updateSchema(req, res, next) {
   const schemaRules = {
-    handle: Joi.string().empty(""),
-    title: Joi.string().empty(""),
-    description: Joi.string().min(60).empty(""),
+    description: Joi.string().max(220).empty(""),
     links: Joi.array().items(
       Joi.object({
         platform: Joi.string().empty(""),

@@ -5,6 +5,7 @@ const validateRequest = require("_middleware/validate-request");
 const authorize = require("_middleware/authorize");
 const Role = require("_helpers/role");
 const accountService = require("./account.service");
+const { nameRegex } = require("../_helpers/validators");
 
 // routes
 router.post("/authenticate", authenticateSchema, authenticate); // TODO Make email case insensitive
@@ -86,8 +87,8 @@ function revokeToken(req, res, next) {
 
 function registerSchema(req, res, next) {
   const schema = Joi.object({
-    firstName: Joi.string().required(),
-    lastName: Joi.string().required(),
+    firstName: Joi.string().regex(nameRegex).required(),
+    lastName: Joi.string().regex(nameRegex).required(),
     email: Joi.string().email().required(),
     password: Joi.string().min(6).required(),
     confirmPassword: Joi.string().valid(Joi.ref("password")).required(),
@@ -194,8 +195,11 @@ function getById(req, res, next) {
 
 function createSchema(req, res, next) {
   const schema = Joi.object({
-    firstName: Joi.string().required(),
-    lastName: Joi.string().required(),
+    firstName: Joi.string().regex(nameRegex).required(),
+    lastName: Joi.string().regex(nameRegex).required(),
+    handle: Joi.string(),
+    title: Joi.string(),
+    address: Joi.object(),
     email: Joi.string().email().required(),
     password: Joi.string().min(6).required(),
     confirmPassword: Joi.string().valid(Joi.ref("password")).required(),
@@ -213,8 +217,14 @@ function create(req, res, next) {
 
 function updateSchema(req, res, next) {
   const schemaRules = {
-    firstName: Joi.string().empty(""),
-    lastName: Joi.string().empty(""),
+    handle: Joi.string().empty(""),
+    title: Joi.string().empty(""),
+    location: Joi.object({
+      city: Joi.string().empty(""),
+      country: Joi.string().empty(""),
+    }),
+    firstName: Joi.string().regex(nameRegex).empty(""),
+    lastName: Joi.string().regex(nameRegex).empty(""),
     email: Joi.string().email().empty(""),
     password: Joi.string().min(6).empty(""),
     confirmPassword: Joi.string().valid(Joi.ref("password")).empty(""),

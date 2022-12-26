@@ -29,7 +29,8 @@ module.exports = {
 };
 
 async function authenticate({ email, password, ipAddress }) {
-  const account = await db.Account.findOne({ email });
+  const lowercaseEmail = email.toLowerCase();
+  const account = await db.Account.findOne({ email: lowercaseEmail });
 
   if (
     !account ||
@@ -87,14 +88,19 @@ async function revokeToken({ token, ipAddress }) {
 }
 
 async function register(params, origin, ipAddress) {
+  const emailLowercase = params.email.toLowerCase();
+
   // validate
-  if (await db.Account.findOne({ email: params.email })) {
+  if (await db.Account.findOne({ email: emailLowercase })) {
     // send already registered error in email to prevent account enumeration
-    return await sendAlreadyRegisteredEmail(params.email, origin);
+    return await sendAlreadyRegisteredEmail(emailLowercase, origin);
   }
 
   // create account object
-  const account = new db.Account(params);
+  const account = new db.Account({
+    ...params,
+    email: emailLowercase,
+  });
 
   // first registered account is an admin
   const isFirstAccount = (await db.Account.countDocuments({})) === 0;
@@ -281,7 +287,9 @@ function randomTokenString() {
 function basicDetails(account) {
   const {
     id,
+    handle,
     title,
+    location,
     firstName,
     lastName,
     email,
@@ -293,6 +301,8 @@ function basicDetails(account) {
   return {
     id,
     title,
+    handle,
+    location,
     firstName,
     lastName,
     email,

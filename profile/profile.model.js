@@ -3,8 +3,6 @@ const Schema = mongoose.Schema;
 
 const schema = new Schema({
   account: { type: Schema.Types.ObjectId, ref: "Account" },
-  handle: { type: String, required: false },
-  title: { type: String, required: false },
   description: { type: String, required: false },
   links: [{ type: Schema.Types.ObjectId, ref: "Link" }],
   connections: [

@@ -210,12 +210,10 @@ async function getAccountIdByProfileId(profileId) {
 
 // Transformers
 function publicProfile(profile) {
-  const { id, account, handle, title, description, links } = profile;
-  const { firstName, lastName } = account;
+  const { id, account, description, links } = profile;
+  const { firstName, lastName, title, handle, location } = account;
   return {
     id,
-    handle,
-    title,
     description,
     links: links.reduce((reduced, link) => {
       if (link.active) {
@@ -227,17 +225,21 @@ function publicProfile(profile) {
     account: {
       firstName,
       lastName,
+      handle,
+      title,
+      location,
     },
   };
 }
 
 function privateProfile(profile) {
-  const { id, account, handle, title, description, links, connections } =
-    profile;
+  const { id, account, description, links, connections } = profile;
 
   const {
     id: accountId,
-    title: userTitle,
+    title,
+    handle,
+    location,
     firstName,
     lastName,
     email,
@@ -254,14 +256,14 @@ function privateProfile(profile) {
 
   return {
     id,
-    handle,
-    title,
     description,
     links,
     connections: connectionsTransformed,
     account: {
       id: accountId,
-      title: userTitle,
+      title,
+      handle,
+      location,
       firstName,
       lastName,
       email,

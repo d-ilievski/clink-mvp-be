@@ -4,6 +4,7 @@ const mongoose = require("mongoose");
 mongoose.Promise = global.Promise;
 
 const connectDB = async () => {
+  // TODO retry mechanism
   try {
     const connectionOptions = {
       useCreateIndex: true,
