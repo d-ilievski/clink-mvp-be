@@ -198,7 +198,7 @@ function createSchema(req, res, next) {
     firstName: Joi.string().regex(nameRegex).required(),
     lastName: Joi.string().regex(nameRegex).required(),
     handle: Joi.string(),
-    title: Joi.string(),
+    title: Joi.string().max(220),
     address: Joi.object(),
     email: Joi.string().email().required(),
     password: Joi.string().min(6).required(),
@@ -218,7 +218,7 @@ function create(req, res, next) {
 function updateSchema(req, res, next) {
   const schemaRules = {
     handle: Joi.string().empty(""),
-    title: Joi.string().empty(""),
+    title: Joi.string().max(220).empty(""),
     location: Joi.object({
       city: Joi.string().empty(""),
       country: Joi.string().empty(""),
