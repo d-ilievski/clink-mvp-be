@@ -1,5 +1,8 @@
 ﻿const e = require("express");
 const db = require("_helpers/db");
+const LinkType = require("../types/LinkType");
+
+const VCard = require('vcard-creator').default;
 
 module.exports = {
   getPublicByAccountId,
@@ -10,6 +13,7 @@ module.exports = {
   updateLink,
   deleteLink,
   connectProfile,
+  getVCard
 };
 
 // Services
@@ -149,6 +153,49 @@ async function connectProfile(profileId, requesterAccountId) {
     requesterAccountId: requesterAccountId || "Guest",
     connected,
   };
+}
+
+async function getVCard(accountId, user) {
+  const profile = await getProfileByAccountId(accountId);
+
+  const vCard = new VCard();
+  vCard
+    .addName(profile.account.lastName, profile.account.firstName)
+    .addJobtitle(profile.account.title)
+    .addNote(profile.description)
+
+  profile.links.forEach(link => {
+    if (link.active) {
+
+      switch (link.platform) {
+        case LinkType.CustomLink:
+          vCard.addURL(link.url);
+          break;
+
+        case LinkType.Website:
+          vCard.addURL(link.url);
+          break;
+
+        case LinkType.Mobile:
+          vCard.addPhoneNumber(link.url, 'CELL');
+          break;
+
+        case LinkType.BusinessPhone:
+          vCard.addPhoneNumber(link.url, 'WORK');
+          break;
+
+        case LinkType.PersonalPhone:
+          vCard.addPhoneNumber(link.url);
+          break;
+      
+        default:
+          vCard.addSocial(link.url, link.platform);
+          break;
+      }
+    }
+  });
+
+  return vCard.toString()
 }
 
 // DB Queries

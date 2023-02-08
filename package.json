@@ -25,6 +25,7 @@
         "nodemailer": "^6.4.6",
         "rootpath": "^0.1.2",
         "swagger-ui-express": "^4.1.4",
+        "vcard-creator": "^0.6.0",
         "yamljs": "^0.3.0"
     },
     "devDependencies": {

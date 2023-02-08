@@ -22,6 +22,8 @@ router.delete("/link", authorize(), deleteLinkSchema, deleteLink);
 // Accessed through scanning the tag, should return the account id of the connection for redirect to the profile
 router.get("/connect/:profileId", optionallyAuthorize(), connectProfile); // optional auth
 
+router.post("/save", authorize(), saveProfileSchema, saveProfile); // optional auth
+
 module.exports = router;
 
 // TODO Rename to getPublicProfile
@@ -143,6 +145,24 @@ function connectProfile(req, res, next) {
     .connectProfile(req.params.profileId, requesterAccountId)
     .then((connection) =>
       connection ? res.json({ connection }) : res.sendStatus(404)
+    )
+    .catch(next);
+}
+
+function saveProfileSchema(req, res, next) {
+  const schemaRules = {
+    accountId: Joi.string().required(),
+  };
+
+  const schema = Joi.object(schemaRules);
+
+  validateRequest(req, next, schema);
+}
+function saveProfile(req, res, next) {
+  profileService
+    .getVCard(req.body.accountId, req.user)
+    .then((vcard) =>
+      vcard ? res.status(200).attachment('contact.vcf').send(vcard) : res.sendStatus(404)
     )
     .catch(next);
 }
