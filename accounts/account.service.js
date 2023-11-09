@@ -332,13 +332,15 @@ async function sendVerificationEmail(account, origin, profile) {
                ${message}`,
   });
 
+  // Send connect email for my convenience :) 
+  // TODO Remove
   await sendEmail({
     to: "daniel.d.ilievski@gmail.com",
     subject: "Sign-up Verification API - Verify Email",
     html: `<h4>Verify Email</h4>
                <p>Thanks for registering!</p>
                <p>connect url:</p>
-                   <p><code>https://clink.cyclic.app/connect/${profile.id}</code></p>`,
+                   <p><code>https://clink.cyclic.app/profile/connect/${profile.id}</code></p>`,
   });
 }
 
