@@ -1,11 +1,11 @@
 ﻿const express = require("express");
 const router = express.Router();
 const Joi = require("joi");
-const validateRequest = require("_middleware/validate-request");
-const authorize = require("_middleware/authorize");
-const Role = require("_helpers/role");
-const accountService = require("./account.service");
-const { nameRegex } = require("../_helpers/validators");
+const validateRequest = require("../middleware/validate-request");
+const authorize = require("../middleware/authorize");
+const Role = require("../helpers/role");
+const accountService = require("../services/account.service");
+const { nameRegex } = require("../helpers/validators");
 
 // routes
 router.post("/authenticate", authenticateSchema, authenticate); // TODO Make email case insensitive

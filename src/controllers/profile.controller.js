@@ -1,12 +1,12 @@
 ﻿const express = require("express");
 const router = express.Router();
 const Joi = require("joi");
-const validateRequest = require("_middleware/validate-request");
-const authorize = require("_middleware/authorize");
-const Role = require("_helpers/role");
-const profileService = require("./profile.service");
+const validateRequest = require("../middleware/validate-request");
+const authorize = require("../middleware/authorize");
+const Role = require("../helpers/role");
+const profileService = require("../services/profile.service");
 
-const optionallyAuthorize = require("../_middleware/optionallyAuthorize");
+const optionallyAuthorize = require("../middleware/optionallyAuthorize");
 
 // routes
 router.get("/:id", getPublicByAccountId);

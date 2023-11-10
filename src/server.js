@@ -4,9 +4,9 @@ const app = express();
 const bodyParser = require("body-parser");
 const cookieParser = require("cookie-parser");
 const cors = require("cors");
-const errorHandler = require("_middleware/error-handler");
+const errorHandler = require("./middleware/error-handler");
 const path = require("path");
-const { connectMongoose } = require("_helpers/db");
+const { connectMongoose } = require("./helpers/db");
 
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
@@ -21,11 +21,11 @@ app.use(
 );
 
 // api routes
-app.use("/api/accounts", require("./accounts/accounts.controller"));
-app.use("/api/profile", require("./profile/profile.controller"));
+app.use("/api/accounts", require("./controllers/accounts.controller"));
+app.use("/api/profile", require("./controllers/profile.controller"));
 
 // swagger docs route
-app.use("/api-docs", require("_helpers/swagger"));
+app.use("/api-docs", require("./helpers/swagger"));
 
 // global error handler
 app.use(errorHandler);

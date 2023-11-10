@@ -29,9 +29,9 @@ function isValidId(id) {
 
 module.exports = {
   connectMongoose: connectDB,
-  Account: require("accounts/account.model"),
-  RefreshToken: require("accounts/refresh-token.model"),
+  Account: require("src/models/account.model"),
+  RefreshToken: require("src/models/refresh-token.model"),
   isValidId,
-  Profile: require("profile/profile.model"),
-  Link: require("profile/link.model"),
+  Profile: require("src/models/profile.model"),
+  Link: require("src/models/link.model"),
 };
