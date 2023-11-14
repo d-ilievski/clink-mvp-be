@@ -3,26 +3,26 @@ const Schema = mongoose.Schema;
 
 const schema = new Schema({
   account: { type: Schema.Types.ObjectId, ref: "Account" },
+
+  type: { type: String, required: true },
+  headline: { type: String, required: false },
   description: { type: String, required: false },
-  links: [{ type: Schema.Types.ObjectId, ref: "Link" }],
-  connections: [
+  links: [
     {
-      profile: { type: Schema.Types.ObjectId, ref: "Profile" },
-      date: { type: Date, default: Date.now },
-    },
+      link: { type: Schema.Types.ObjectId, ref: "Link" },
+      active: { type: Boolean, required: true, default: true },
+    }
   ],
+  profileSettings: {
+    showHeadline: { type: Boolean, required: true, default: true },
+    showDescription: { type: Boolean, required: true, default: true },
+    showLastName: { type: Boolean, required: true, default: true },
+    showLocation: { type: Boolean, required: true, default: true },
+    showSaveToContacts: { type: Boolean, required: true, default: true },
+  },
+  
   created: { type: Date, default: Date.now },
   updated: Date,
 });
-
-// schema.set("toJSON", {
-//   virtuals: true,
-//   versionKey: false,
-//   transform: function (doc, ret) {
-//     // remove these props when object is serialized
-//     delete ret._id;
-//     delete ret.passwordHash;
-//   },
-// });
 
 module.exports = mongoose.model("Profile", schema);

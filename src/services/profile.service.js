@@ -1,6 +1,6 @@
 ﻿const e = require("express");
 const db = require("../helpers/db");
-const LinkType = require("../types/LinkType");
+const LinkType = require("../types/link.type");
 
 const VCard = require('vcard-creator').default;
 

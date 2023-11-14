@@ -1,10 +1,8 @@
-const config = require("config.json");
+const config = require("../config");
 const db = require("../helpers/db");
 const jwt = require("jsonwebtoken");
 
 const secret = process.env.JWT_SECRET || config.secret;
-
-module.exports = optionallyAuthorize;
 
 function optionallyAuthorize(roles = []) {
   // roles param can be a single role string (e.g. Role.User or 'User')
@@ -45,3 +43,5 @@ function optionallyAuthorize(roles = []) {
     },
   ];
 }
+
+module.exports = optionallyAuthorize;

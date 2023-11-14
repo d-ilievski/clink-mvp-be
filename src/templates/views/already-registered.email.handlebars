@@ -1,0 +1,18 @@
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Email Already Registered | Clink</title>
+  </head>
+  <body>
+    {{> header.email }}
+
+    <h1>Email Already Registered</h1>
+    <div>
+      <p>Your email <strong>{{email}}</strong> is already registered.</p>
+      <p>If you don't know your password please visit the <a href="{{forgotPasswordUrl}}">forgot password</a> page.</p>
+    </div>
+
+    {{> footer.email }}
+  </body>
+</html>

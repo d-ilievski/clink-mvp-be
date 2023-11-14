@@ -2,7 +2,7 @@
 
 const Joi = require("joi");
 const validateRequest = require("../middleware/validate-request");
-const Role = require("../helpers/role");
+const Role = require("../types/role.type");
 const profileService = require("../services/profile.service");
 
 

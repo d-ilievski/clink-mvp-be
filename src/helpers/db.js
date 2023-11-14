@@ -1,4 +1,4 @@
-const config = require("config.json");
+const config = require("../config");
 const mongoose = require("mongoose");
 
 mongoose.Promise = global.Promise;
@@ -28,10 +28,15 @@ function isValidId(id) {
 }
 
 module.exports = {
-  connectMongoose: connectDB,
-  Account: require("src/models/account.model"),
-  RefreshToken: require("src/models/refresh-token.model"),
+  // helpers
   isValidId,
+  connectDB,
+
+  // models
+  Account: require("src/models/account.model"),
+  AccountDetails: require("src/models/account-details.model"),
+  Tag: require("src/models/tag.model"),
   Profile: require("src/models/profile.model"),
   Link: require("src/models/link.model"),
+  RefreshToken: require("src/models/refresh-token.model"),
 };

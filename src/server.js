@@ -6,7 +6,7 @@ const cookieParser = require("cookie-parser");
 const cors = require("cors");
 const errorHandler = require("./middleware/error-handler");
 const path = require("path");
-const { connectMongoose } = require("./helpers/db");
+const { connectDB } = require("./helpers/db");
 
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
@@ -24,20 +24,17 @@ app.use(
 app.use("/api/accounts", require("./routes/accounts.route"));
 app.use("/api/profile", require("./routes/profile.route"));
 
-// swagger docs route
-app.use("/api-docs", require("./helpers/swagger"));
-
 // global error handler
 app.use(errorHandler);
 
+// serve index.html from /build for production
 app.use(express.static("build"));
-
 app.get("*", function (req, res) {
   res.sendFile(path.join(__dirname, "build", "index.html"));
 });
 
 // start server
-connectMongoose().then(() => {
+connectDB().then(() => {
   const port =
     process.env.NODE_ENV === "production" ? process.env.PORT || 80 : 4000;
 

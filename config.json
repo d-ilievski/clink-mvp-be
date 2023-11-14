@@ -1,5 +1,0 @@
-﻿{
-  "connectionString": "mongodb://localhost/clink-db",
-  "secret": "THIS IS USED TO SIGN AND VERIFY JWT TOKENS",
-  "emailFrom": "info@clink.com"
-}

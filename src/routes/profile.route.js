@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const authorize = require("../middleware/authorize");
-const optionallyAuthorize = require("../middleware/optionallyAuthorize");
+const optionallyAuthorize = require("../middleware/optionally-authorize");
 
 const {
     getPublicByAccountId,
