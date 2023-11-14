@@ -1,4 +1,4 @@
-const config = require("../config");
+const config = require("../config.local");
 const db = require("../helpers/db");
 const jwt = require("jsonwebtoken");
 

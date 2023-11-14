@@ -2,7 +2,7 @@ const nodemailer = require("nodemailer");
 const hbs = require('nodemailer-express-handlebars');
 const path = require('path');
 const express = require('express');
-const config = require("../config");
+const config = require("../config.local");
 const viewPath = path.resolve(__dirname, '../templates/views');
 const partialsPath = path.resolve(__dirname, '../templates/partials');
 

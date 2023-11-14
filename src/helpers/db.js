@@ -1,4 +1,4 @@
-const config = require("../config");
+const config = require("../config.local");
 const mongoose = require("mongoose");
 
 mongoose.Promise = global.Promise;

@@ -1,5 +1,5 @@
 const jwt = require("express-jwt");
-const config = require("../config");
+const config = require("../config.local");
 const db = require("../helpers/db");
 
 const secret = process.env.JWT_SECRET || config.secret;
