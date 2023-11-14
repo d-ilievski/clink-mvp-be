@@ -1,4 +1,5 @@
-﻿const config = require("../config.local");
+﻿
+const config = require("../config.local");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 const crypto = require("crypto");
@@ -10,6 +11,18 @@ const { sendVerificationEmail, sendAlreadyRegisteredEmail, sendPasswordResetEmai
 
 const secret = process.env.JWT_SECRET || config.secret;
 
+
+/**
+ * Authenticates a user with their email and password.
+ * @async
+ * @function
+ * @param {Object} params - The authentication parameters.
+ * @param {string} params.email - The user's email.
+ * @param {string} params.password - The user's password.
+ * @param {string} params.ipAddress - The user's IP address.
+ * @returns {Promise<Object>} An object containing the user's basic details, JWT token, and refresh token.
+ * @throws {string} Throws an error if the email or password is incorrect.
+ */
 async function authenticate({ email, password, ipAddress }) {
   const lowercaseEmail = email.toLowerCase();
   const account = await db.Account.findOne({ email: lowercaseEmail });
@@ -37,6 +50,17 @@ async function authenticate({ email, password, ipAddress }) {
   };
 }
 
+
+/**
+ * Generates a new JWT token and refresh token for the given user's refresh token.
+ * Called when a user's JWT token almost expires or when a user starts the app again.
+ * @async
+ * @function refreshToken
+ * @param {Object} options - The options object.
+ * @param {string} options.token - The user's refresh token.
+ * @param {string} options.ipAddress - The IP address of the user.
+ * @returns {Promise<Object>} An object containing the user's basic details, a new JWT token, and a new refresh token.
+ */
 async function refreshToken({ token, ipAddress }) {
   const refreshToken = await getRefreshToken(token);
   const { account } = refreshToken;
@@ -60,7 +84,19 @@ async function refreshToken({ token, ipAddress }) {
   };
 }
 
-async function revokeToken({ token, ipAddress }) {
+
+/**
+ * Logs out a user by revoking their refresh token.
+ * The token's validity gets checked with it's virtual `isActive` property.
+ * @async
+ * @function logout
+ * @param {Object} options - The options object.
+ * @param {string} options.token - The user's JWT token.
+ * @param {string} options.ipAddress - The IP address of the user.
+ * @returns {Promise<void>}
+ */
+async function logout({ token, ipAddress }) {
+  // find the refresh token from the db and check if it's active
   const refreshToken = await getRefreshToken(token);
 
   // revoke token and save
@@ -112,6 +148,8 @@ async function register(params, origin, ipAddress) {
     await refreshToken.save();
 
     // return basic details and tokens
+
+    // TODO Return accountDetails (connections, stats, settings, etc.)
     return {
       ...basicDetails(account),
       jwtToken,
@@ -246,7 +284,7 @@ function basicDetails(account) {
 module.exports = {
   authenticate,
   refreshToken,
-  revokeToken,
+  logout,
   register,
   verifyEmail,
   forgotPassword,

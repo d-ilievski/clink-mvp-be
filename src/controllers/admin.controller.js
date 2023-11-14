@@ -94,13 +94,42 @@ function _delete(req, res, next) {
     .catch(next);
 }
 
+// TODO Rename to revoke token
+
+function logoutSchema(req, res, next) {
+  const schema = Joi.object({
+    token: Joi.string().empty(""),
+  });
+  validateRequest(req, next, schema);
+}
+
+function logout(req, res, next) {
+  // accept token from request body or cookie
+  const token = req.body.token || req.cookies.refreshToken;
+  const ipAddress = req.ip;
+
+  if (!token) return res.status(400).json({ message: "Token is required" });
+
+  // users can revoke their own tokens and admins can revoke any tokens
+  if (req.user.role !== Role.Admin) {
+    return res.status(401).json({ message: "Unauthorized" });
+  }
+
+  accountService
+    .logout({ token, ipAddress })
+    .then(() => res.json({ message: "Token revoked" }))
+    .catch(next);
+}
+
 
 module.exports = {
-    getAll,
-    getById,
-    createSchema,
-    create,
-    updateSchema,
-    update,
-    delete: _delete,
-  };
+  getAll,
+  getById,
+  createSchema,
+  create,
+  updateSchema,
+  update,
+  delete: _delete,
+  logoutSchema,
+  logout,
+};

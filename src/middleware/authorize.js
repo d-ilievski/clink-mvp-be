@@ -4,8 +4,6 @@ const db = require("../helpers/db");
 
 const secret = process.env.JWT_SECRET || config.secret;
 
-module.exports = authorize;
-
 function authorize(roles = []) {
   // roles param can be a single role string (e.g. Role.User or 'User')
   // or an array of roles (e.g. [Role.Admin, Role.User] or ['Admin', 'User'])
@@ -35,3 +33,5 @@ function authorize(roles = []) {
     },
   ];
 }
+
+module.exports = authorize;

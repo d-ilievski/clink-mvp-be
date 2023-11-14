@@ -8,9 +8,9 @@ const {
     authenticate,
 
     refreshToken,
-    revokeTokenSchema,
 
-    revokeToken,
+    logoutSchema,
+    logout,
 
     registerSchema,
     register,
@@ -33,7 +33,7 @@ const {
 
 router.post("/authenticate", authenticateSchema, authenticate);
 router.post("/refresh-token", refreshToken);
-router.post("/revoke-token", authorize(), revokeTokenSchema, revokeToken);
+router.post("/logout", authorize(), logoutSchema, logout);
 
 router.post("/register", registerSchema, register);
 router.post("/verify-email", verifyEmailSchema, verifyEmail);
