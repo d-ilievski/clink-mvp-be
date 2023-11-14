@@ -79,41 +79,51 @@ async function register(params, origin, ipAddress) {
     throw `Something happened!`;
   }
 
-  // create account object
-  const account = new db.Account({
-    ...params,
-    email: emailLowercase,
-  });
+  // the whole registration process is wrapped in a try/catch block because of dependency on the profile service
+  try {
 
-  // first registered account is an admin
-  const isFirstAccount = (await db.Account.countDocuments({})) === 0;
-  account.role = isFirstAccount ? Role.Admin : Role.User;
-  account.verificationToken = randomTokenString();
+    // create account object
+    const account = new db.Account({
+      ...params,
+      email: emailLowercase,
+    });
 
-  // hash password
-  account.passwordHash = hash(params.password);
+    // first registered account is an admin
+    const isFirstAccount = (await db.Account.countDocuments({})) === 0;
+    account.role = isFirstAccount ? Role.Admin : Role.User;
+    account.verificationToken = randomTokenString();
 
-  // save account
-  await account.save();
+    // hash password
+    account.passwordHash = hash(params.password);
 
-  const profile = await profileService.createProfile(account.id);
+    // save account
+    await account.save();
 
-  // send email
-  sendVerificationEmail(account, origin, profile);
+    const profile = await profileService.createProfile(account.id);
 
-  // authentication successful so generate jwt and refresh tokens
-  const jwtToken = generateJwtToken(account);
-  const refreshToken = generateRefreshToken(account, ipAddress);
+    // send email
+    sendVerificationEmail(account, origin, profile);
 
-  // save refresh token
-  await refreshToken.save();
+    // authentication successful so generate jwt and refresh tokens
+    const jwtToken = generateJwtToken(account);
+    const refreshToken = generateRefreshToken(account, ipAddress);
 
-  // return basic details and tokens
-  return {
-    ...basicDetails(account),
-    jwtToken,
-    refreshToken: refreshToken.token,
-  };
+    // save refresh token
+    await refreshToken.save();
+
+    // return basic details and tokens
+    return {
+      ...basicDetails(account),
+      jwtToken,
+      refreshToken: refreshToken.token,
+    };
+  } catch (error) {
+    // if anything fails in the registration process, delete the account
+    account.remove();
+
+    throw error;
+  }
+
 }
 
 async function verifyEmail({ token }) {
