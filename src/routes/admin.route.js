@@ -10,7 +10,7 @@
 //     updateSchema,
 //     update,
 //     delete: _delete,
-// } = require("../controllers/accounts.controller");
+// } = require("../controllers/account.controller");
 
 
 // router.get("/", authorize(Role.Admin), getAll);

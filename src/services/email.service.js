@@ -35,13 +35,14 @@ async function sendEmail({ to, subject, template, context, from = config.emailFr
 
 
 /**
- * Send a verification email to the user's email address
+ * Sends a verification email to the specified account's email address.
  * 
- * @param { Account } account The account to send the verification email to
- * @param { String } origin The origin of the request
- * @param { Profile } profile The profile of the account
+ * @param {Object} account - The account object containing the email address and verification token.
+ * @param {Object} accountDetails - The account details object containing the first name of the account owner.
+ * @param {string} origin - The origin URL of the application.
+ * @returns {Promise<void>} - A Promise that resolves when the email has been sent.
  */
-async function sendVerificationEmail(account, origin, profile) {
+async function sendVerificationEmail(account, accountDetails, origin) {
     if (!origin)
         return;
 
@@ -50,7 +51,7 @@ async function sendVerificationEmail(account, origin, profile) {
         subject: "Verify your email address - Clink",
         template: 'verification.email',
         context: {
-            name: profile.name,
+            name: accountDetails.firstName,
             verifyUrl: `${origin}/account/verify?token=${account.verificationToken}`,
         },
     });

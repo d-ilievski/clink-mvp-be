@@ -26,7 +26,7 @@ const {
 
     resetPasswordSchema,
     resetPassword,
-} = require("../controllers/accounts.controller");
+} = require("../controllers/account.controller");
 
 
 // routes

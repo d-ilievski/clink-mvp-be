@@ -21,7 +21,7 @@ app.use(
 );
 
 // api routes
-app.use("/api/accounts", require("./routes/accounts.route"));
+app.use("/api/accounts", require("./routes/account.route"));
 app.use("/api/profile", require("./routes/profile.route"));
 
 // global error handler

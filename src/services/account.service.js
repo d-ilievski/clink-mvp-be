@@ -3,11 +3,17 @@ const config = require("../config.local");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 const crypto = require("crypto");
-const db = require("../helpers/db");
 const Role = require("../types/role.type");
 
+const AccountDetailsModel = require("../models/account-details.model");
+const AccountModel = require("../models/account.model");
+const RefreshTokenModel = require("../models/refresh-token.model");
+
 const profileService = require("../services/profile.service");
+const accountDetailsService = require("../services/account-details.service");
 const { sendVerificationEmail, sendAlreadyRegisteredEmail, sendPasswordResetEmail } = require("./email.service");
+const AccountDetailsDto = require("../dto/account-details.dto");
+const AccountDto = require("../dto/account.dto");
 
 const secret = process.env.JWT_SECRET || config.secret;
 
@@ -25,7 +31,7 @@ const secret = process.env.JWT_SECRET || config.secret;
  */
 async function authenticate({ email, password, ipAddress }) {
   const lowercaseEmail = email.toLowerCase();
-  const account = await db.Account.findOne({ email: lowercaseEmail });
+  const account = await AccountModel.findOne({ email: lowercaseEmail });
 
   if (
     !account ||
@@ -39,12 +45,13 @@ async function authenticate({ email, password, ipAddress }) {
   const jwtToken = generateJwtToken(account);
   const refreshToken = generateRefreshToken(account, ipAddress);
 
-  // save refresh token
-  await refreshToken.save();
+  const accountDetails =
+    await AccountDetailsModel.findOne({ account: account.id })
 
   // return basic details and tokens
   return {
-    ...basicDetails(account),
+    ...new AccountDto(account),
+    ...new AccountDetailsDto(accountDetails),
     jwtToken,
     refreshToken: refreshToken.token,
   };
@@ -71,14 +78,13 @@ async function refreshToken({ token, ipAddress }) {
   refreshToken.revokedByIp = ipAddress;
   refreshToken.replacedByToken = newRefreshToken.token;
   await refreshToken.save();
-  await newRefreshToken.save();
 
   // generate new jwt
   const jwtToken = generateJwtToken(account);
 
   // return basic details and tokens
   return {
-    ...basicDetails(account),
+    ...new AccountDto(account),
     jwtToken,
     refreshToken: newRefreshToken.token,
   };
@@ -105,11 +111,22 @@ async function logout({ token, ipAddress }) {
   await refreshToken.save();
 }
 
+/**
+ * Registers a new account with the provided parameters.
+ * 
+ * @param {Object} params - The account registration parameters.
+ * @param {string} params.email - The email address of the user.
+ * @param {string} params.password - The password of the user.
+ * @param {string} origin - The origin of the request.
+ * @param {string} ipAddress - The IP address of the user.
+ * @returns {Promise<Object>} - An object containing the account details and tokens.
+ * @throws {string} - Throws an error if something goes wrong during the registration process.
+ */
 async function register(params, origin, ipAddress) {
   const emailLowercase = params.email.toLowerCase();
 
   // validate
-  if (await db.Account.findOne({ email: emailLowercase })) {
+  if (await AccountModel.findOne({ email: emailLowercase })) {
     // send already registered error in email to prevent account enumeration
     sendAlreadyRegisteredEmail(emailLowercase, origin);
     throw `Something happened!`;
@@ -117,55 +134,66 @@ async function register(params, origin, ipAddress) {
 
   // the whole registration process is wrapped in a try/catch block because of dependency on the profile service
   try {
-
     // create account object
-    const account = new db.Account({
-      ...params,
+    const account = new AccountModel({
       email: emailLowercase,
     });
-
     // first registered account is an admin
-    const isFirstAccount = (await db.Account.countDocuments({})) === 0;
+    const isFirstAccount = (await AccountModel.countDocuments({})) === 0;
     account.role = isFirstAccount ? Role.Admin : Role.User;
+    // random verification token
     account.verificationToken = randomTokenString();
-
     // hash password
     account.passwordHash = hash(params.password);
-
     // save account
     await account.save();
 
+    // create profile and add it to the account details
     const profile = await profileService.createProfile(account.id);
 
-    // send email
-    sendVerificationEmail(account, origin, profile);
+    // create account details
+    const accountDetails = await accountDetailsService.createAccountDetails(account, profile, params);
 
     // authentication successful so generate jwt and refresh tokens
     const jwtToken = generateJwtToken(account);
     const refreshToken = generateRefreshToken(account, ipAddress);
 
-    // save refresh token
-    await refreshToken.save();
+    // send verification email
+    sendVerificationEmail(account, accountDetails, origin);
 
     // return basic details and tokens
-
-    // TODO Return accountDetails (connections, stats, settings, etc.)
     return {
-      ...basicDetails(account),
+      ...new AccountDto(account),
+      ...new AccountDetailsDto(accountDetails),
       jwtToken,
       refreshToken: refreshToken.token,
     };
+
   } catch (error) {
-    // if anything fails in the registration process, delete the account
-    account.remove();
+
+    // if anything fails in the registration process, delete the account and the profile
+    if (account) account.remove();
+    if (accountDetails) accountDetails.remove();
+    if (profile) profile.remove();
 
     throw error;
   }
 
 }
 
+
+/**
+ * Verifies the email of an account using a verification token.
+ * 
+ * @async
+ * @function
+ * @param {Object} options - The options object.
+ * @param {string} options.token - The verification token.
+ * @throws {string} Throws an error if verification fails.
+ * @returns {Promise<void>} A Promise that resolves when the email is verified.
+ */
 async function verifyEmail({ token }) {
-  const account = await db.Account.findOne({ verificationToken: token });
+  const account = await AccountModel.findOne({ verificationToken: token });
 
   if (!account) throw "Verification failed";
 
@@ -174,8 +202,16 @@ async function verifyEmail({ token }) {
   await account.save();
 }
 
+
+/**
+ * Sends a password reset email to the user with the given email address.
+ * 
+ * @param {Object} param - The email address of the user to send the password reset email to.
+ * @param {string} param.email - The email address of the user to send the password reset email to.
+ * @param {string} origin - The origin of the request.
+ */
 async function forgotPassword({ email }, origin) {
-  const account = await db.Account.findOne({ email });
+  const account = await AccountModel.findOne({ email });
 
   // always return ok response to prevent email enumeration
   if (!account) return;
@@ -191,8 +227,17 @@ async function forgotPassword({ email }, origin) {
   await sendPasswordResetEmail(account, origin);
 }
 
+/**
+ * Validates a reset token for an account.
+ * 
+ * @async
+ * @function
+ * @param {Object} options - The options object.
+ * @param {string} options.token - The reset token to validate.
+ * @throws {string} Throws an error if the token is invalid.
+ */
 async function validateResetToken({ token }) {
-  const account = await db.Account.findOne({
+  const account = await AccountModel.findOne({
     "resetToken.token": token,
     "resetToken.expires": { $gt: Date.now() },
   });
@@ -200,8 +245,20 @@ async function validateResetToken({ token }) {
   if (!account) throw "Invalid token";
 }
 
+
+/**
+ * Resets the password for an account using a reset token.
+ * 
+ * @async
+ * @function
+ * @param {Object} options - The options object.
+ * @param {string} options.token - The reset token.
+ * @param {string} options.password - The new password.
+ * @throws {string} Invalid token
+ * @returns {Promise<void>} A Promise that resolves when the password has been reset.
+ */
 async function resetPassword({ token, password }) {
-  const account = await db.Account.findOne({
+  const account = await AccountModel.findOne({
     "resetToken.token": token,
     "resetToken.expires": { $gt: Date.now() },
   });
@@ -218,7 +275,7 @@ async function resetPassword({ token, password }) {
 // helper functions
 
 async function getRefreshToken(token) {
-  const refreshToken = await db.RefreshToken.findOne({ token }).populate(
+  const refreshToken = await RefreshTokenModel.findOne({ token }).populate(
     "account"
   );
   if (!refreshToken || !refreshToken.isActive) throw "Invalid token";
@@ -238,48 +295,20 @@ function generateJwtToken(account) {
 
 function generateRefreshToken(account, ipAddress) {
   // create a refresh token that expires in 7 days
-  return new db.RefreshToken({
+  const refreshToken = new RefreshTokenModel({
     account: account.id,
     token: randomTokenString(),
     expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
     createdByIp: ipAddress,
   });
+  refreshToken.save();
+
+  return refreshToken;
 }
 
 function randomTokenString() {
   return crypto.randomBytes(40).toString("hex");
 }
-
-function basicDetails(account) {
-  const {
-    id,
-    handle,
-    title,
-    location,
-    firstName,
-    lastName,
-    email,
-    role,
-    created,
-    updated,
-    isVerified,
-  } = account;
-  return {
-    id,
-    title,
-    handle,
-    location,
-    firstName,
-    lastName,
-    email,
-    role,
-    created,
-    updated,
-    isVerified,
-  };
-}
-
-
 
 module.exports = {
   authenticate,
@@ -290,6 +319,4 @@ module.exports = {
   forgotPassword,
   validateResetToken,
   resetPassword,
-  // helpers
-  basicDetails,
 };

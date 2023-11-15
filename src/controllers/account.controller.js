@@ -107,10 +107,12 @@ function verifyEmail(req, res, next) {
   accountService
     .verifyEmail(req.body)
     .then(() =>
-      res.json({ message: "Verification successful, you can now login" })
+      res.json({ message: "Verification successful." })
     )
     .catch(next);
 }
+
+// ==================================================== Forgot Password
 
 function forgotPasswordSchema(req, res, next) {
   const schema = Joi.object({
@@ -129,6 +131,8 @@ function forgotPassword(req, res, next) {
     )
     .catch(next);
 }
+
+// ==================================================== Reset Password
 
 function validateResetTokenSchema(req, res, next) {
   const schema = Joi.object({
