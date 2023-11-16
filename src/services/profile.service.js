@@ -1,31 +1,30 @@
-﻿const e = require("express");
-const db = require("../helpers/db");
+﻿const db = require("../helpers/db");
 const LinkType = require("../types/link.type");
 
 const VCard = require('vcard-creator').default;
 
-module.exports = {
-  getPublicByAccountId,
-  getByAccountId,
-  updateProfile,
-  createProfile,
-  createLink,
-  updateLink,
-  deleteLink,
-  connectProfile,
-  getVCard
-};
+const ProfileModel = require("../models/profile.model");
+
+const ProfilePrivateDto = require("../dto/profile-private.dto");
 
 // Services
 
-async function getPublicByAccountId(id) {
+/**
+ * Retrieves a private profile by account ID.
+ *
+ * @async
+ * @function
+ * @param {string} id - The account ID to retrieve the profile for.
+ * @returns {Promise<ProfilePrivateDto>} A promise that resolves with the private profile DTO.
+ */
+async function getPrivateProfile(id) {
   const profile = await getProfileByAccountId(id);
-  return publicProfile(profile);
+  return new ProfilePrivateDto(profile);
 }
 
-async function getByAccountId(id) {
+async function getPublicProfile(id) {
   const profile = await getProfileByAccountId(id);
-  return privateProfile(profile);
+  return publicProfile(profile);
 }
 
 async function updateProfile(id, params) {
@@ -63,53 +62,6 @@ async function createProfile(accountId) {
   await profile.save();
 
   return profile;
-}
-
-async function createLink(accountId, params) {
-  const profile = await getProfileByAccountId(accountId);
-
-  const linkValues = {
-    ...params,
-    profile: profile.id,
-  };
-
-  const link = new db.Link(linkValues);
-  await link.save();
-
-  profile.links.push(link.id);
-  await profile.save();
-
-  return link;
-}
-
-async function updateLink(params) {
-  const link = await getLinkById(params.id);
-
-  // copy params to account and save
-  Object.assign(link, params);
-  link.updated = Date.now();
-  await link.save();
-
-  return link;
-}
-
-async function deleteLink(accountId, params) {
-  await db.Profile.updateOne(
-    { account: accountId },
-    {
-      $pullAll: {
-        links: [{ _id: params.id }],
-      },
-    }
-  );
-
-  const deleteResult = await db.Link.deleteOne({ _id: params.id });
-
-  if (!deleteResult.ok) {
-    throw "Link not deleted";
-  }
-
-  return deleteResult;
 }
 
 async function connectProfile(profileId, requesterAccountId) {
@@ -187,7 +139,7 @@ async function getVCard(accountId, user) {
         case LinkType.PersonalPhone:
           vCard.addPhoneNumber(link.url);
           break;
-      
+
         default:
           vCard.addSocial(link.url, link.platform);
           break;
@@ -215,23 +167,21 @@ async function getProfileById(id) {
 
 async function getProfileByAccountId(accountId) {
   if (!db.isValidId(accountId)) throw "Profile not found";
-  const profile = await db.Profile.findOne({ account: accountId })
+  const profile = await ProfileModel.findOne({ account: accountId })
     .populate({
       path: "account",
     })
     .populate({
-      path: "links",
+      path: "accountDetails",
     })
     .populate({
-      path: "connections",
+      path: "links",
       populate: {
-        path: "profile",
-        model: "Profile",
-        populate: {
-          path: "account",
-          model: "Account",
-        },
+        path: "link",
       },
+    })
+    .populate({
+      path: "profileSettings",
     });
 
   if (!profile) throw "Profile not found";
@@ -317,3 +267,13 @@ function privateProfile(profile) {
     },
   };
 }
+
+
+module.exports = {
+  getPublicProfile,
+  getPrivateProfile,
+  updateProfile,
+  createProfile,
+  connectProfile,
+  getVCard
+};

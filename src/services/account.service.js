@@ -47,6 +47,13 @@ async function authenticate({ email, password, ipAddress }) {
 
   const accountDetails =
     await AccountDetailsModel.findOne({ account: account.id })
+      .populate("profile")
+      .populate({
+        path: "profiles",
+        select: "type",
+      })
+      .populate("tags")
+      .populate("connections")
 
   // return basic details and tokens
   return {
@@ -153,6 +160,7 @@ async function register(params, origin, ipAddress) {
 
     // create account details
     const accountDetails = await accountDetailsService.createAccountDetails(account, profile, params);
+    accountDetails.populate("profile");
 
     // authentication successful so generate jwt and refresh tokens
     const jwtToken = generateJwtToken(account);

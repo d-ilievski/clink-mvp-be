@@ -4,35 +4,34 @@ const authorize = require("../middleware/authorize");
 const optionallyAuthorize = require("../middleware/optionally-authorize");
 
 const {
-    getPublicByAccountId,
-    getByAccountId,
-    updateSchema,
+    getPublicProfile,
+    getAllProfiles,
+    getCurrentProfile,
+    updateProfileSchema,
     updateProfile,
-    createLinkSchema,
-    createLink,
-    updateLinkSchema,
-    updateLink,
-    deleteLinkSchema,
-    deleteLink,
     connectProfile,
-    saveProfileSchema,
-    saveProfile,
+    downloadContactSchema,
+    downloadContact,
 } = require("../controllers/profile.controller");
 
-router.get("/:id", getPublicByAccountId);
+// get personal current profile
+router.get("/", authorize(), getCurrentProfile);
+// get personal profiles
+// TODO Here
+router.get("/all", authorize(), getAllProfiles);
 
-router.get("/", authorize(), getByAccountId);
-router.put("/", authorize(), updateSchema, updateProfile);
+// edit personal profile 
+router.put("/", authorize(), updateProfileSchema, updateProfile);
 
-router.post("/link", authorize(), createLinkSchema, createLink);
-router.put("/link", authorize(), updateLinkSchema, updateLink);
-router.delete("/link", authorize(), deleteLinkSchema, deleteLink);
+// get public profile
+router.get("/:id", getPublicProfile);
 
-// Will accept a profile id and connect the requester with that profile owner.
-// Accessed through scanning the tag, should return the account id of the connection for redirect to the profile
+// TODO Pick up from here. Connect shold be by proile id
+// accepts either logged in user or anonymous user that wants to connect
 router.get("/connect/:profileId", optionallyAuthorize(), connectProfile); // optional auth
 
-router.post("/save", authorize(), saveProfileSchema, saveProfile); // optional auth
+// save to contacts
+router.post("/download-contact", authorize(), downloadContactSchema, downloadContact); // optional auth
 
 
 module.exports = router;

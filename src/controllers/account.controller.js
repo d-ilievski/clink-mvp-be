@@ -1,7 +1,6 @@
 ﻿
 const Joi = require("joi");
 const validateRequest = require("../middleware/validate-request");
-const Role = require("../types/role.type");
 const accountService = require("../services/account.service");
 const { nameRegex } = require("../helpers/validators");
 

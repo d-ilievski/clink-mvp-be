@@ -23,6 +23,8 @@ app.use(
 // api routes
 app.use("/api/accounts", require("./routes/account.route"));
 app.use("/api/profile", require("./routes/profile.route"));
+app.use("/api/link", require("./routes/link.route"));
+app.use("/api/tag", require("./routes/tag.route"));
 
 // global error handler
 app.use(errorHandler);

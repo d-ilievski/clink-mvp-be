@@ -5,25 +5,29 @@ const validateRequest = require("../middleware/validate-request");
 const Role = require("../types/role.type");
 const profileService = require("../services/profile.service");
 
-
-// TODO Rename to getPublicProfile
-function getPublicByAccountId(req, res, next) {
+function getCurrentProfile(req, res, next) {
   profileService
-    .getPublicByAccountId(req.params.id)
+    .getCurrentProfile(req.user.id)
     .then((profile) => (profile ? res.json(profile) : res.sendStatus(404)))
     .catch(next);
 }
 
-// TODO Rename to getPrivateProfile
-function getByAccountId(req, res, next) {
+function getAllProfiles(req, res, next) {
+  // profileService
+  //   .getAllProfiles(req.user.id)
+  //   .then((profile) => (profile ? res.json(profile) : res.sendStatus(404)))
+  //   .catch(next);
+  return true;
+}
+
+function getPublicProfile(req, res, next) {
   profileService
-    .getByAccountId(req.user.id)
+    .getPublicProfile(req.params.id)
     .then((profile) => (profile ? res.json(profile) : res.sendStatus(404)))
     .catch(next);
 }
 
-// TODO Rename to updateProfileSchema
-function updateSchema(req, res, next) {
+function updateProfileSchema(req, res, next) {
   const schemaRules = {
     description: Joi.string().max(220).empty(""),
     links: Joi.array().items(
@@ -51,74 +55,6 @@ function updateProfile(req, res, next) {
     .catch(next);
 }
 
-function createLinkSchema(req, res, next) {
-  const schemaRules = {
-    platform: Joi.string().required(),
-    url: Joi.string().required(),
-    description: Joi.string().empty(""),
-    active: Joi.boolean().default(true),
-  };
-
-  const schema = Joi.object(schemaRules);
-
-  validateRequest(req, next, schema);
-}
-function createLink(req, res, next) {
-  if (!req.user.id && req.user.role !== Role.Admin) {
-    return res.status(401).json({ message: "Unauthorized" });
-  }
-
-  profileService
-    .createLink(req.user.id, req.body)
-    .then((account) => res.json(account))
-    .catch(next);
-}
-
-function updateLinkSchema(req, res, next) {
-  const schemaRules = {
-    id: Joi.string().required(),
-    platform: Joi.string().empty(""),
-    url: Joi.string().required(),
-    active: Joi.boolean(),
-  };
-
-  const schema = Joi.object(schemaRules);
-
-  validateRequest(req, next, schema);
-}
-function updateLink(req, res, next) {
-  // users can update their own account and admins can update any account
-  if (!req.user.id && req.user.role !== Role.Admin) {
-    return res.status(401).json({ message: "Unauthorized" });
-  }
-
-  profileService
-    .updateLink(req.body)
-    .then((link) => res.json(link))
-    .catch(next);
-}
-
-function deleteLinkSchema(req, res, next) {
-  const schemaRules = {
-    id: Joi.string().required(),
-  };
-
-  const schema = Joi.object(schemaRules);
-
-  validateRequest(req, next, schema);
-}
-function deleteLink(req, res, next) {
-  // users can update their own account and admins can update any account
-  if (!req.user.id && req.user.role !== Role.Admin) {
-    return res.status(401).json({ message: "Unauthorized" });
-  }
-
-  profileService
-    .deleteLink(req.user.id, req.body)
-    .then((account) => res.json(account))
-    .catch(next);
-}
-
 function connectProfile(req, res, next) {
   const requesterAccountId = req.user ? req.user.id : undefined;
   profileService
@@ -129,7 +65,7 @@ function connectProfile(req, res, next) {
     .catch(next);
 }
 
-function saveProfileSchema(req, res, next) {
+function downloadContactSchema(req, res, next) {
   const schemaRules = {
     accountId: Joi.string().required(),
   };
@@ -138,7 +74,7 @@ function saveProfileSchema(req, res, next) {
 
   validateRequest(req, next, schema);
 }
-function saveProfile(req, res, next) {
+function downloadContact(req, res, next) {
   profileService
     .getVCard(req.body.accountId, req.user)
     .then((vcard) =>
@@ -148,17 +84,12 @@ function saveProfile(req, res, next) {
 }
 
 module.exports = {
-  getPublicByAccountId,
-  getByAccountId,
-  updateSchema,
+  getPublicProfile,
+  getCurrentProfile,
+  getAllProfiles,
+  updateProfileSchema,
   updateProfile,
-  createLinkSchema,
-  createLink,
-  updateLinkSchema,
-  updateLink,
-  deleteLinkSchema,
-  deleteLink,
   connectProfile,
-  saveProfileSchema,
-  saveProfile,
+  downloadContactSchema,
+  downloadContact,
 };
