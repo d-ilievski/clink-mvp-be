@@ -3,6 +3,7 @@ const Joi = require("joi");
 const validateRequest = require("../middleware/validate-request");
 const Role = require("../types/role.type");
 const accountService = require("../services/account.service");
+const adminService = require("../services/admin.service");
 const { nameRegex } = require("../helpers/validators");
 
 function getAll(req, res, next) {
@@ -121,6 +122,14 @@ function logout(req, res, next) {
     .catch(next);
 }
 
+function deleteAccount(req, res, next) {
+
+  adminService
+    .deleteAccount(req.user.id)
+    .then(() => res.json({ message: "Account deleted successfully" }))
+    .catch(next);
+}
+
 
 module.exports = {
   getAll,
@@ -132,4 +141,5 @@ module.exports = {
   delete: _delete,
   logoutSchema,
   logout,
+  deleteAccount,
 };

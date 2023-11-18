@@ -25,6 +25,8 @@ app.use("/api/accounts", require("./routes/account.route"));
 app.use("/api/profile", require("./routes/profile.route"));
 app.use("/api/link", require("./routes/link.route"));
 app.use("/api/tag", require("./routes/tag.route"));
+// TODO Remove
+app.use("/api/admin", require("./routes/admin.route"));
 
 // global error handler
 app.use(errorHandler);

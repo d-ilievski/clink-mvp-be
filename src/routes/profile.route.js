@@ -16,17 +16,15 @@ const {
 
 // get personal current profile
 router.get("/", authorize(), getCurrentProfile);
-// get personal profiles
-// TODO Here
-router.get("/all", authorize(), getAllProfiles);
-
 // edit personal profile 
 router.put("/", authorize(), updateProfileSchema, updateProfile);
+
+// get personal profiles
+router.get("/all", authorize(), getAllProfiles);
 
 // get public profile
 router.get("/:id", getPublicProfile);
 
-// TODO Pick up from here. Connect shold be by proile id
 // accepts either logged in user or anonymous user that wants to connect
 router.get("/connect/:profileId", optionallyAuthorize(), connectProfile); // optional auth
 

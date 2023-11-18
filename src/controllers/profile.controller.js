@@ -7,22 +7,7 @@ const profileService = require("../services/profile.service");
 
 function getCurrentProfile(req, res, next) {
   profileService
-    .getCurrentProfile(req.user.id)
-    .then((profile) => (profile ? res.json(profile) : res.sendStatus(404)))
-    .catch(next);
-}
-
-function getAllProfiles(req, res, next) {
-  // profileService
-  //   .getAllProfiles(req.user.id)
-  //   .then((profile) => (profile ? res.json(profile) : res.sendStatus(404)))
-  //   .catch(next);
-  return true;
-}
-
-function getPublicProfile(req, res, next) {
-  profileService
-    .getPublicProfile(req.params.id)
+    .getPrivateProfile(req.user.id)
     .then((profile) => (profile ? res.json(profile) : res.sendStatus(404)))
     .catch(next);
 }
@@ -54,6 +39,23 @@ function updateProfile(req, res, next) {
     .then((account) => res.json(account))
     .catch(next);
 }
+
+function getAllProfiles(req, res, next) {
+  // profileService
+  //   .getAllProfiles(req.user.id)
+  //   .then((profile) => (profile ? res.json(profile) : res.sendStatus(404)))
+  //   .catch(next);
+  return true;
+}
+
+function getPublicProfile(req, res, next) {
+  profileService
+    .getPublicProfile(req.params.id)
+    .then((profile) => (profile ? res.json(profile) : res.sendStatus(404)))
+    .catch(next);
+}
+
+
 
 function connectProfile(req, res, next) {
   const requesterAccountId = req.user ? req.user.id : undefined;

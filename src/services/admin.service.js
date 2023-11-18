@@ -58,6 +58,18 @@ async function _delete(id) {
     await account.remove();
 }
 
+async function deleteAccount(id) {
+    const account = await getAccount(id);
+
+    Promise.all([
+        db.AccountDetails.deleteOne({ account: id }),
+        db.Profile.deleteOne({ account: id }),
+        db.Account.deleteOne({ _id: id }),
+    ]);
+}
+
+
+
 // helper functions
 
 async function getAccount(id) {
@@ -65,7 +77,7 @@ async function getAccount(id) {
     const account = await db.Account.findById(id);
     if (!account) throw "Account not found";
     return account;
-  }
+}
 
 module.exports = {
     getAll,
@@ -73,4 +85,5 @@ module.exports = {
     create,
     update,
     delete: _delete,
+    deleteAccount,
 }

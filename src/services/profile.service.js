@@ -6,6 +6,7 @@ const VCard = require('vcard-creator').default;
 const ProfileModel = require("../models/profile.model");
 
 const ProfilePrivateDto = require("../dto/profile-private.dto");
+const AccountDetailsPrivateDto = require("../dto/account-details-private.dto");
 
 // Services
 
@@ -18,8 +19,12 @@ const ProfilePrivateDto = require("../dto/profile-private.dto");
  * @returns {Promise<ProfilePrivateDto>} A promise that resolves with the private profile DTO.
  */
 async function getPrivateProfile(id) {
+  const accountDetails = await db.AccountDetails.findOne({ account: id });
   const profile = await getProfileByAccountId(id);
-  return new ProfilePrivateDto(profile);
+  return {
+    accountDetails: new AccountDetailsPrivateDto(accountDetails),
+    ...new ProfilePrivateDto(profile)
+  }
 }
 
 async function getPublicProfile(id) {
@@ -170,9 +175,6 @@ async function getProfileByAccountId(accountId) {
   const profile = await ProfileModel.findOne({ account: accountId })
     .populate({
       path: "account",
-    })
-    .populate({
-      path: "accountDetails",
     })
     .populate({
       path: "links",

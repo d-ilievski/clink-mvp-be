@@ -2,7 +2,7 @@ class ProfilePrivateDto {
 
     #transformData(data) {
         // destructuring
-        const { id, account, accountDetails, type, headline, description, links, profileSettings } = data;
+        const { id, account, type, headline, description, links, profileSettings } = data;
 
         const {
             id: accountId,
@@ -11,12 +11,6 @@ class ProfilePrivateDto {
             isVerified,
         } = account;
 
-        const {
-            firstName,
-            lastName,
-            location,
-        } = accountDetails;
-
         return {
             id,
             account: {
@@ -24,11 +18,6 @@ class ProfilePrivateDto {
                 email,
                 role,
                 isVerified,
-            },
-            accountDetails: {
-                firstName,
-                lastName,
-                location,
             },
             type,
             headline,
@@ -40,7 +29,7 @@ class ProfilePrivateDto {
 
     constructor(data) {
 
-        const { id, account, accountDetails, type, headline, description, links, profileSettings } = this.#transformData(data);
+        const { id, account, type, headline, description, links, profileSettings } = this.#transformData(data);
 
         // assign
         this.id = id;
@@ -49,11 +38,6 @@ class ProfilePrivateDto {
             email: account.email,
             role: account.role,
             isVerified: account.isVerified,
-        };
-        this.accountDetails = {
-            firstName: accountDetails.firstName,
-            lastName: accountDetails.lastName,
-            location: accountDetails.location,
         };
         this.type = type;
         this.headline = headline;

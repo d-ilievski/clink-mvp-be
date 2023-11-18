@@ -11,7 +11,7 @@ const schema = new Schema({
   },
   passwordHash: { type: String, required: true },
   role: { type: String, required: true },
-  
+
   verificationToken: String,
   verified: Date,
   resetToken: {
@@ -19,7 +19,9 @@ const schema = new Schema({
     expires: Date,
   },
   passwordReset: Date,
-  
+
+  accountDetails: { type: Schema.Types.ObjectId, ref: "AccountDetails" },
+
   created: { type: Date, default: Date.now },
   updated: Date,
 });

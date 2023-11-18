@@ -1,4 +1,4 @@
-class AccountDetailsDto {
+class AccountDetailsPrivateDto {
 
     constructor(data) {
         this.firstName = data.firstName;
@@ -12,4 +12,4 @@ class AccountDetailsDto {
     }
 }
 
-module.exports = AccountDetailsDto;
+module.exports = AccountDetailsPrivateDto;

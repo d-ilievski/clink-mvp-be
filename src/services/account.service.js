@@ -12,7 +12,7 @@ const RefreshTokenModel = require("../models/refresh-token.model");
 const profileService = require("../services/profile.service");
 const accountDetailsService = require("../services/account-details.service");
 const { sendVerificationEmail, sendAlreadyRegisteredEmail, sendPasswordResetEmail } = require("./email.service");
-const AccountDetailsDto = require("../dto/account-details.dto");
+const AccountDetailsPrivateDto = require("../dto/account-details-private.dto");
 const AccountDto = require("../dto/account.dto");
 
 const secret = process.env.JWT_SECRET || config.secret;
@@ -46,7 +46,7 @@ async function authenticate({ email, password, ipAddress }) {
   const refreshToken = generateRefreshToken(account, ipAddress);
 
   const accountDetails =
-    await AccountDetailsModel.findOne({ account: account.id })
+    await AccountDetailsModel.findById(account.accountDetails)
       .populate("profile")
       .populate({
         path: "profiles",
@@ -58,7 +58,7 @@ async function authenticate({ email, password, ipAddress }) {
   // return basic details and tokens
   return {
     ...new AccountDto(account),
-    ...new AccountDetailsDto(accountDetails),
+    accountDetails: new AccountDetailsPrivateDto(accountDetails),
     jwtToken,
     refreshToken: refreshToken.token,
   };
@@ -152,6 +152,7 @@ async function register(params, origin, ipAddress) {
     account.verificationToken = randomTokenString();
     // hash password
     account.passwordHash = hash(params.password);
+
     // save account
     await account.save();
 
@@ -160,7 +161,11 @@ async function register(params, origin, ipAddress) {
 
     // create account details
     const accountDetails = await accountDetailsService.createAccountDetails(account, profile, params);
+    account.accountDetails = accountDetails.id; // set account details id to the account for easier querying
     accountDetails.populate("profile");
+
+    // save account
+    await account.save();
 
     // authentication successful so generate jwt and refresh tokens
     const jwtToken = generateJwtToken(account);
@@ -172,7 +177,7 @@ async function register(params, origin, ipAddress) {
     // return basic details and tokens
     return {
       ...new AccountDto(account),
-      ...new AccountDetailsDto(accountDetails),
+      accountDetails: new AccountDetailsPrivateDto(accountDetails),
       jwtToken,
       refreshToken: refreshToken.token,
     };
