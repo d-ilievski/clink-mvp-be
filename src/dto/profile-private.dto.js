@@ -5,7 +5,7 @@ class ProfilePrivateDto {
         const { id, account, type, headline, description, links, profileSettings } = data;
 
         const {
-            id: accountId,
+            // id: accountId,
             email,
             role,
             isVerified,
@@ -14,7 +14,7 @@ class ProfilePrivateDto {
         return {
             id,
             account: {
-                id: accountId,
+                // id: accountId, // might not need this
                 email,
                 role,
                 isVerified,
@@ -34,7 +34,7 @@ class ProfilePrivateDto {
         // assign
         this.id = id;
         this.account = {
-            id: accountId,
+            id: account.id,
             email: account.email,
             role: account.role,
             isVerified: account.isVerified,

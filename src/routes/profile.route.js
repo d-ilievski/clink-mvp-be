@@ -4,26 +4,30 @@ const authorize = require("../middleware/authorize");
 const optionallyAuthorize = require("../middleware/optionally-authorize");
 
 const {
+    getActiveProfile,
     getPublicProfile,
     getAllProfiles,
-    getCurrentProfile,
     updateProfileSchema,
     updateProfile,
+    createProfileSchema,
+    createProfile,
+
     connectProfile,
     downloadContactSchema,
     downloadContact,
 } = require("../controllers/profile.controller");
 
-// get personal current profile
-router.get("/", authorize(), getCurrentProfile);
-// edit personal profile 
-router.put("/", authorize(), updateProfileSchema, updateProfile);
-
-// get personal profiles
+// get active profile
+router.get("/", authorize(), getActiveProfile);
+// get all personal profiles
 router.get("/all", authorize(), getAllProfiles);
-
+// create a profile
+router.post("/create", authorize(), createProfileSchema, createProfile);
+// edit profile 
+router.put("/:id", authorize(), updateProfileSchema, updateProfile);
 // get public profile
 router.get("/:id", getPublicProfile);
+
 
 // accepts either logged in user or anonymous user that wants to connect
 router.get("/connect/:profileId", optionallyAuthorize(), connectProfile); // optional auth

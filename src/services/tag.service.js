@@ -1,4 +1,4 @@
-function getCurrentProfileByTag() {
+function getActiveProfileByTag() {
     return true;
 }
 
@@ -11,7 +11,7 @@ function toggleTag() {
 }
 
 module.exports = {
-    getCurrentProfileByTag,
+    getActiveProfileByTag,
     claimTag,
     toggleTag,
 };

@@ -1,7 +1,7 @@
 const tagService = require('../services/tag.service');
 
-function getCurrentProfileByTag(/*req, res, next*/) {
-    tagService.getCurrentProfileByTag();
+function getActiveProfileByTag(/*req, res, next*/) {
+    tagService.getActiveProfileByTag();
     return true;
 }
 
@@ -16,7 +16,7 @@ function toggleTag(/*req, res, next*/) {
 }
 
 module.exports = {
-    getCurrentProfileByTag,
+    getActiveProfileByTag,
     claimTag,
     toggleTag,
 };

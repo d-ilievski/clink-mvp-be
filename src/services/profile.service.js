@@ -7,66 +7,112 @@ const ProfileModel = require("../models/profile.model");
 
 const ProfilePrivateDto = require("../dto/profile-private.dto");
 const AccountDetailsPrivateDto = require("../dto/account-details-private.dto");
+const AccountDetailsPublicDto = require("../dto/account-details-public.dto");
+const ProfilePublicDto = require("../dto/profile-public.dto");
 
 // Services
 
+
 /**
- * Retrieves a private profile by account ID.
- *
- * @async
- * @function
- * @param {string} id - The account ID to retrieve the profile for.
- * @returns {Promise<ProfilePrivateDto>} A promise that resolves with the private profile DTO.
+ * Retrieves the active profile for a given account ID.
+ * 
+ * @param {string} accountId - The ID of the account.
+ * @returns {Promise<Object>} - The active profile and account details.
  */
-async function getPrivateProfile(id) {
-  const accountDetails = await db.AccountDetails.findOne({ account: id });
-  const profile = await getProfileByAccountId(id);
+async function getActiveProfile(accountId) {
+  const accountDetails = await db.AccountDetails.findOne({ account: accountId });
+  const profile = await getProfileById(accountDetails.activeProfile);
   return {
     accountDetails: new AccountDetailsPrivateDto(accountDetails),
     ...new ProfilePrivateDto(profile)
   }
 }
 
-async function getPublicProfile(id) {
-  const profile = await getProfileByAccountId(id);
-  return publicProfile(profile);
-}
 
-async function updateProfile(id, params) {
-  const profile = await getProfileByAccountId(id);
+/**
+ * Updates a profile with the given profileId using the provided parameters.
+ *
+ * @param {string} profileId - The ID of the profile to be updated.
+ * @param {object} params - The parameters to update the profile with.
+ * @returns {Promise<ProfilePrivateDto>} A promise that resolves to the updated profile.
+ */
+async function updateProfile(profileId, params) {
+  const profile = await getProfileById(profileId);
 
   // copy params to account and save
   Object.assign(profile, params);
   profile.updated = Date.now();
   await profile.save();
 
-  return privateProfile(profile);
+  return new ProfilePrivateDto(profile);
 }
 
-async function createProfile(accountId) {
-  // validate
-  // if (await db.Account.findById(accountId)) {
-  //   throw "Account not found.";
-  // }
+/**
+ * Retrieves the public profile of a user.
+ * 
+ * @param {string} profileId - The ID of the profile to retrieve.
+ * @returns {Promise<Object>} The public profile object.
+ */
+async function getPublicProfile(profileId) {
+  const profile = await getProfileById(profileId);
+  const accountDetails = await db.AccountDetails.findOne({ account: profile.account.id });
 
-  const account = await db.Account.findById(accountId);
-
-  if (!account) {
-    throw "Account not found.";
+  return {
+    accountDetails: new AccountDetailsPublicDto(accountDetails, profile.profileSettings),
+    ...new ProfilePublicDto(profile)
   }
+}
 
+/**
+ * Retrieves all profiles associated with the given account ID.
+ *
+ * @param {string} accountId - The ID of the account.
+ * @returns {Promise<{ profiles: ProfilePrivateDto[] }>} - An object containing an array of profiles.
+ * @throws {string} - Throws an error if the profile is not found.
+ */
+async function getAllProfiles(accountId) {
+  const profiles = await ProfileModel.find({ account: accountId })
+    .populate({
+      path: "account",
+    })
+    .populate({
+      path: "links",
+      populate: {
+        path: "link",
+      },
+    })
+    .populate({
+      path: "profileSettings",
+    });
+
+  if (!profiles || !profiles.length) throw "Profile not found";
+
+  return {
+    profiles: profiles.map(profile => new ProfilePrivateDto(profile)),
+  }
+}
+
+async function createProfile(accountId, params = {
+  title: "",
+  description: "",
+}) {
+  // create the profile with the constructed initial values
   const initialValues = {
-    account: account._id,
-    handle: "",
-    title: "",
-    description: "",
+    account: accountId,
+    ...params,
   };
-
   const profile = new db.Profile(initialValues);
-
   await profile.save();
 
-  return profile;
+  // save the profile in the list of user profiles
+  const accountDetails = await db.AccountDetails.findOne({ account: accountId });
+  accountDetails.profiles.push(profile.id);
+  await accountDetails.save();
+
+  return {
+    accountDetails: new AccountDetailsPrivateDto(accountDetails),
+    ...new ProfilePrivateDto(profile),
+  };
 }
 
 async function connectProfile(profileId, requesterAccountId) {
@@ -159,13 +205,19 @@ async function getVCard(accountId, user) {
 
 async function getProfileById(id) {
   if (!db.isValidId(id)) throw "Profile not found";
-  const profile = await db.Profile.findById(id).populate({
-    path: "connections",
-    populate: {
-      path: "profile",
-      model: "Profile",
-    },
-  });
+  const profile = await db.Profile.findById(id)
+    .populate({
+      path: "account",
+    })
+    .populate({
+      path: "links",
+      populate: {
+        path: "link",
+      },
+    })
+    .populate({
+      path: "profileSettings",
+    });
   if (!profile) throw "Profile not found";
   return profile;
 }
@@ -272,9 +324,10 @@ function privateProfile(profile) {
 
 
 module.exports = {
-  getPublicProfile,
-  getPrivateProfile,
+  getActiveProfile,
   updateProfile,
+  getAllProfiles,
+  getPublicProfile,
   createProfile,
   connectProfile,
   getVCard
