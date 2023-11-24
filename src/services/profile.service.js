@@ -11,6 +11,8 @@ const AccountDetailsPrivateDto = require("../dto/account-details-private.dto");
 const AccountDetailsPublicDto = require("../dto/account-details-public.dto");
 const ProfilePublicDto = require("../dto/profile-public.dto");
 
+var object = require('lodash/fp/object');
+
 // Services
 
 
@@ -37,11 +39,15 @@ async function getActiveProfile(accountId) {
  * @param {object} params - The parameters to update the profile with.
  * @returns {Promise<ProfilePrivateDto>} A promise that resolves to the updated profile.
  */
-async function updateProfile(profileId, params) {
+async function updateProfile(accountId, profileId, params) {
+  // prevent editing of other user's profiles
+  const accountDetails = await db.AccountDetails.findOne({ account: accountId });
+  if (!accountDetails.profiles.some(profile => profile.toString() === profileId)) throw "Something went wrong!";
+
   const profile = await getProfileById(profileId);
 
   // copy params to account and save
-  Object.assign(profile, params);
+  object.merge(profile, params);
   profile.updated = Date.now();
   await profile.save();
 
@@ -117,8 +123,14 @@ async function createProfile(accountId, params = {
 }
 
 async function connectProfile(requesterAccountId, params) {
+
+
   // get requester account details
   const requesterAccountDetails = await AccountDetailsModel.findOne({ account: requesterAccountId });
+
+  // prevent connecting to self
+  if (requesterAccountDetails.profiles.some(profile => profile.toString() === params.profileId)) throw "Cannot connect to self";
+
   // find the profile of the user to connect to
   const requestedProfile = await getProfileById(params.profileId);
   const requestedAccountDetails = await AccountDetailsModel.findOne({ account: requestedProfile.account.id });

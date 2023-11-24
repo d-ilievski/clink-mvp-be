@@ -34,9 +34,8 @@ function updateProfileSchema(req, res, next) {
   validateRequest(req, next, schema);
 }
 function updateProfile(req, res, next) {
-
   profileService
-    .updateProfile(req.params.id, req.body)
+    .updateProfile(req.user.id, req.params.id, req.body)
     .then((response) => res.json(response))
     .catch(next);
 }
