@@ -73,21 +73,25 @@ function createProfile(req, res, next) {
   return true;
 }
 
+function connectProfileSchema(req, res, next) {
+  const schemaRules = {
+    profileId: Joi.string().required(),
+  };
+  const schema = Joi.object(schemaRules);
 
-
-
-
-
-
-
+  validateRequest(req, next, schema);
+}
 function connectProfile(req, res, next) {
-  const requesterAccountId = req.user ? req.user.id : undefined;
   profileService
-    .connectProfile(req.params.profileId, requesterAccountId)
-    .then((connection) =>
-      connection ? res.json({ connection }) : res.sendStatus(404)
+    .connectProfile(req.user.id, req.body)
+    .then((response) =>
+      response ? res.json(response) : res.sendStatus(404)
     )
     .catch(next);
+}
+
+function connectAnonymousProfile(req, res, next) {
+
 }
 
 function downloadContactSchema(req, res, next) {
@@ -116,7 +120,9 @@ module.exports = {
   updateProfile,
   createProfileSchema,
   createProfile,
+  connectProfileSchema,
   connectProfile,
+  connectAnonymousProfile,
   downloadContactSchema,
   downloadContact,
 };

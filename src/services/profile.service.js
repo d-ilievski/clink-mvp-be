@@ -3,6 +3,7 @@ const LinkType = require("../types/link.type");
 
 const VCard = require('vcard-creator').default;
 
+const AccountDetailsModel = require("../models/account-details.model");
 const ProfileModel = require("../models/profile.model");
 
 const ProfilePrivateDto = require("../dto/profile-private.dto");
@@ -115,46 +116,35 @@ async function createProfile(accountId, params = {
   };
 }
 
-async function connectProfile(profileId, requesterAccountId) {
-  const accountId = await getAccountIdByProfileId(profileId);
-  let connected = false;
+async function connectProfile(requesterAccountId, params) {
+  // get requester account details
+  const requesterAccountDetails = await AccountDetailsModel.findOne({ account: requesterAccountId });
+  // find the profile of the user to connect to
+  const requestedProfile = await getProfileById(params.profileId);
+  const requestedAccountDetails = await AccountDetailsModel.findOne({ account: requestedProfile.account.id });
 
-  if (requesterAccountId && requesterAccountId !== accountId) {
-    const requesterProfile = await getProfileByAccountId(requesterAccountId);
-    const requesterConnecton = requesterProfile.connections.find(
-      (connection) => connection.profile.id === profileId
-    );
-
-    const userProfile = await getProfileById(profileId);
-    const userConnection = userProfile.connections.find(
-      (connection) => connection.profile.id === requesterProfile.id
-    );
-
-    if (requesterConnecton) {
-      // they connected in the past, update date
-      requesterConnecton.date = Date.now();
-    } else {
-      // requester hasn't connected in the past
-      requesterProfile.connections.push({ profile: profileId });
+  // check if there's a connection already with each side
+  const requesterConnection = requesterAccountDetails.connections.find(connection => connection.profile.toString() === params.profileId);
+  const requestedConnection = requestedAccountDetails.connections.find(connection => connection.profile.toString() === requesterAccountDetails.activeProfile.toString());
+  // if there is, update the dates
+  if (requesterConnection && requestedConnection) {
+    requesterConnection.date = Date.now();
+    requestedConnection.date = Date.now();
+  } else {
+    if (!requesterConnection) {
+      // if there isn't on each side, add the connection
+      requesterAccountDetails.connections.push({ profile: params.profileId, date: Date.now() });
     }
-
-    if (userConnection) {
-      // they connected in the past, update date
-      userConnection.date = Date.now();
-    } else {
-      // the user hasn't connected in the past
-      userProfile.connections.push({ profile: requesterProfile.id });
+    if (!requestedConnection) {
+      requestedAccountDetails.connections.push({ profile: requesterAccountDetails.activeProfile, date: Date.now() });
     }
-
-    await requesterProfile.save();
-    await userProfile.save();
-    connected = true;
   }
 
+  await requestedAccountDetails.save();
+  await requesterAccountDetails.save();
+
   return {
-    accountId,
-    requesterAccountId: requesterAccountId || "Guest",
-    connected,
+    connected: true,
   };
 }
 

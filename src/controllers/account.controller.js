@@ -82,6 +82,9 @@ function registerSchema(req, res, next) {
 }
 
 function register(req, res, next) {
+  if (req.user) {
+    throw "Already logged in";
+  }
   const ipAddress = req.ip;
   accountService
     .register(req.body, req.get("origin"), ipAddress)

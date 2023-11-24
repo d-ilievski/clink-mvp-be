@@ -139,10 +139,12 @@ async function register(params, origin, ipAddress) {
     throw `Something happened!`;
   }
 
+  let account, accountDetails, profile;
+
   // the whole registration process is wrapped in a try/catch block because of dependency on the profile service
   try {
     // create account object
-    const account = new AccountModel({
+    account = new AccountModel({
       email: emailLowercase,
     });
     // first registered account is an admin
@@ -156,16 +158,22 @@ async function register(params, origin, ipAddress) {
     // save account
     await account.save();
 
-    // create profile and add it to the account details
-    const profile = await profileService.createProfile(account.id);
+
 
     // create account details
-    const accountDetails = await accountDetailsService.createAccountDetails(account, profile, params);
+    accountDetails = await accountDetailsService.createAccountDetails(account, params);
     account.accountDetails = accountDetails.id; // set account details id to the account for easier querying
-    accountDetails.populate("profile");
 
-    // save account
+    // create profile and add it to the account details (must be done after account details is saved)
+    profile = await profileService.createProfile(account.id);
+    accountDetails.activeProfile = profile.id;
+
+    // save account and account details
     await account.save();
+    await accountDetails.save();
+
+    // fill in the account details with the active profile object
+    await accountDetails.populate("activeProfile");
 
     // authentication successful so generate jwt and refresh tokens
     const jwtToken = generateJwtToken(account);
