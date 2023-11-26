@@ -13,7 +13,7 @@ const {
     createProfile,
     connectProfileSchema,
     connectProfile,
-
+    connectAnonymousProfileSchema,
     connectAnonymousProfile,
     downloadContactSchema,
     downloadContact,
@@ -30,12 +30,11 @@ router.put("/:id", authorize(), updateProfileSchema, updateProfile);
 // get public profile
 router.get("/:id", getPublicProfile);
 // accepts logged in user that wants to connect
-router.post("/connect", authorize(), connectProfileSchema, connectProfile); // optional auth
-
+router.post("/connect", authorize(), connectProfileSchema, connectProfile);
 // accepts anonymous user that wants to connect (lead)
-router.post("/connect-anonymous", connectAnonymousProfile); // optional auth
+router.post("/connect-anonymous", connectAnonymousProfileSchema, connectAnonymousProfile);
 // save to contacts
-router.post("/download-contact", authorize(), downloadContactSchema, downloadContact); // optional auth
+router.post("/download-contact", downloadContactSchema, downloadContact);
 
 
 module.exports = router;

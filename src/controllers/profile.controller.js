@@ -89,13 +89,32 @@ function connectProfile(req, res, next) {
     .catch(next);
 }
 
-function connectAnonymousProfile(req, res, next) {
+function connectAnonymousProfileSchema(req, res, next) {
+  const schemaRules = {
+    profileId: Joi.string().required(),
+    firstName: Joi.string().required(),
+    links: Joi.array().items(Joi.object({
+      type: Joi.string().required(),
+      platform: Joi.string().required(),
+      value: Joi.string().required()
+    }))
+  };
+  const schema = Joi.object(schemaRules);
 
+  validateRequest(req, next, schema);
+}
+function connectAnonymousProfile(req, res, next) {
+  profileService
+    .connectAnonymousProfile(req.body)
+    .then((response) =>
+      response ? res.json(response) : res.sendStatus(404)
+    )
+    .catch(next);
 }
 
 function downloadContactSchema(req, res, next) {
   const schemaRules = {
-    accountId: Joi.string().required(),
+    profileId: Joi.string().required(),
   };
 
   const schema = Joi.object(schemaRules);
@@ -104,9 +123,9 @@ function downloadContactSchema(req, res, next) {
 }
 function downloadContact(req, res, next) {
   profileService
-    .getVCard(req.body.accountId, req.user)
-    .then((vcard) =>
-      vcard ? res.status(200).attachment('contact.vcf').send(vcard) : res.sendStatus(404)
+    .downloadContact(req.body.profileId)
+    .then(({ vCard, filename }) =>
+      vCard ? res.status(200).attachment(filename).send(vCard) : res.sendStatus(404)
     )
     .catch(next);
 }
@@ -121,6 +140,7 @@ module.exports = {
   createProfile,
   connectProfileSchema,
   connectProfile,
+  connectAnonymousProfileSchema,
   connectAnonymousProfile,
   downloadContactSchema,
   downloadContact,

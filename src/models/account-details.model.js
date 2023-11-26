@@ -21,6 +21,17 @@ const schema = new Schema({
       date: { type: Date, default: Date.now },
     },
   ],
+  anonymousConnections: [
+    {
+      firstName: { type: String, required: true, trim: true },
+      links: [{
+        type: { type: String, required: true },
+        platform: { type: String, required: true },
+        value: { type: String, required: true },
+      }],
+      date: { type: Date, default: Date.now },
+    }
+  ],
 
   links: [{ type: Schema.Types.ObjectId, ref: "Link" }],
 

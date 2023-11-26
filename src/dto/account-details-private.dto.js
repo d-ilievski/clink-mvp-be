@@ -7,6 +7,7 @@ class AccountDetailsPrivateDto {
         this.activeProfile = data.activeProfile;
         this.tags = data.tags;
         this.connections = data.connections;
+        this.anonymousConnections = data.anonymousConnections;
         this.links = data.links;
         this.profiles = data.profiles;
     }

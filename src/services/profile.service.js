@@ -99,6 +99,15 @@ async function getAllProfiles(accountId) {
   }
 }
 
+/**
+ * Creates a profile for a given account.
+ * 
+ * @param {string} accountId - The ID of the account.
+ * @param {Object} params - The parameters for the profile.
+ * @param {string} params.title - The title of the profile (default to empty string).
+ * @param {string} params.description - The description of the profile (default to empty string).
+ * @returns {Object} - An object containing the account details and the created profile.
+ */
 async function createProfile(accountId, params = {
   title: "",
   description: "",
@@ -122,9 +131,16 @@ async function createProfile(accountId, params = {
   };
 }
 
+/**
+ * Mutually connect requester's default profile with the requested profile.
+ * 
+ * @param {string} requesterAccountId - The ID of the requester's account.
+ * @param {Object} params - The parameters for connecting the profile.
+ * @param {string} params.profileId - The ID of the profile to connect.
+ * @returns {Promise<Object>} - A promise that resolves to an object indicating the connection status.
+ * @throws {string} - Throws an error if attempting to connect to self.
+ */
 async function connectProfile(requesterAccountId, params) {
-
-
   // get requester account details
   const requesterAccountDetails = await AccountDetailsModel.findOne({ account: requesterAccountId });
 
@@ -160,47 +176,81 @@ async function connectProfile(requesterAccountId, params) {
   };
 }
 
-async function getVCard(accountId, user) {
-  const profile = await getProfileByAccountId(accountId);
+/**
+ * Connects an anonymous profile to a user's account.
+ * 
+ * @param {Object} params - The parameters for connecting the profile.
+ * @param {string} params.profileId - The ID of the profile to connect.
+ * @param {string} params.firstName - The first name of the anonymous profile.
+ * @param {Array<string>} params.links - The links associated with the anonymous profile.
+ * @returns {Promise<Object>} - A promise that resolves to an object indicating the connection status.
+ */
+async function connectAnonymousProfile(params) {
+  // find the profile of the user to connect to
+  const requestedProfile = await getProfileById(params.profileId);
+  const requestedAccountDetails = await AccountDetailsModel.findOne({ account: requestedProfile.account.id });
+
+  if (!requestedAccountDetails.anonymousConnections) {
+    requestedAccountDetails.anonymousConnections = [];
+  }
+  requestedAccountDetails.anonymousConnections.push({ firstName: params.firstName, links: params.links, date: Date.now() });
+
+  await requestedAccountDetails.save();
+
+  return {
+    connected: true,
+  };
+}
+
+async function downloadContact(profileId) {
+  const profile = await getProfileById(profileId);
+  if (!profile) throw "Profile not found";
+  const accountDetails = await AccountDetailsModel.findOne({ account: profile.account.id });
 
   const vCard = new VCard();
   vCard
-    .addName(profile.account.lastName, profile.account.firstName)
-    .addJobtitle(profile.account.title)
-    .addNote(profile.description)
+    .addName(profile.profileSettings.showLastName ? accountDetails.lastName : undefined, accountDetails.firstName)
+    .addJobtitle(profile.headline) // check if its not hidden in profile settings first
+    .addNote(profile.description) // check if its not hidden in profile settings first
 
-  profile.links.forEach(link => {
-    if (link.active) {
+  // TODO: Include links
+  // profile.links.forEach(link => {
+  //   if (link.active) {
 
-      switch (link.platform) {
-        case LinkType.CustomLink:
-          vCard.addURL(link.url);
-          break;
+  //     switch (link.platform) {
+  //       case LinkType.CustomLink:
+  //         vCard.addURL(link.url);
+  //         break;
 
-        case LinkType.Website:
-          vCard.addURL(link.url);
-          break;
+  //       case LinkType.Website:
+  //         vCard.addURL(link.url);
+  //         break;
 
-        case LinkType.Mobile:
-          vCard.addPhoneNumber(link.url, 'CELL');
-          break;
+  //       case LinkType.Mobile:
+  //         vCard.addPhoneNumber(link.url, 'CELL');
+  //         break;
 
-        case LinkType.BusinessPhone:
-          vCard.addPhoneNumber(link.url, 'WORK');
-          break;
+  //       case LinkType.BusinessPhone:
+  //         vCard.addPhoneNumber(link.url, 'WORK');
+  //         break;
 
-        case LinkType.PersonalPhone:
-          vCard.addPhoneNumber(link.url);
-          break;
+  //       case LinkType.PersonalPhone:
+  //         vCard.addPhoneNumber(link.url);
+  //         break;
 
-        default:
-          vCard.addSocial(link.url, link.platform);
-          break;
-      }
-    }
-  });
+  //       default:
+  //         vCard.addSocial(link.url, link.platform);
+  //         break;
+  //     }
+  //   }
+  // });
 
-  return vCard.toString()
+  const filename = `${accountDetails.firstName}${profile.profileSettings.showLastName ?
+    '_' + accountDetails.lastName : ''}.vcf`;
+  return {
+    filename,
+    vCard: vCard.toString(),
+  }
 }
 
 // DB Queries
@@ -332,5 +382,6 @@ module.exports = {
   getPublicProfile,
   createProfile,
   connectProfile,
-  getVCard
+  connectAnonymousProfile,
+  downloadContact
 };
