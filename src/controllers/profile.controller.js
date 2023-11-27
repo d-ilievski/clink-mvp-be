@@ -13,6 +13,7 @@ function getActiveProfile(req, res, next) {
 
 function updateProfileSchema(req, res, next) {
   const schemaRules = {
+    profileId: Joi.string().required(),
     headline: Joi.string().max(120).allow(""),
     description: Joi.string().max(240).allow(""),
     links: Joi.array().items(
@@ -35,7 +36,7 @@ function updateProfileSchema(req, res, next) {
 }
 function updateProfile(req, res, next) {
   profileService
-    .updateProfile(req.user.id, req.params.id, req.body)
+    .updateProfile(req.user.id, req.body)
     .then((response) => res.json(response))
     .catch(next);
 }

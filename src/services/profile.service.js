@@ -33,20 +33,24 @@ async function getActiveProfile(accountId) {
 }
 
 
+
 /**
- * Updates a profile with the given profileId using the provided parameters.
- *
- * @param {string} profileId - The ID of the profile to be updated.
- * @param {object} params - The parameters to update the profile with.
- * @returns {Promise<ProfilePrivateDto>} A promise that resolves to the updated profile.
+ * Updates a profile for a given account and profileId.
+ * 
+ * @param {string} accountId - The ID of the account.
+ * @param {Object} params - The parameters for updating the profile.
+ * @param {string} params.profileId - The ID of the profile to be updated.
+ * @returns {Promise<ProfilePrivateDto>} The updated profile.
+ * @throws {string} Throws an error if something goes wrong.
  */
-async function updateProfile(accountId, profileId, params) {
+async function updateProfile(accountId, params) {
   // prevent editing of other user's profiles
   const accountDetails = await AccountDetailsModel.findOne({ account: accountId });
-  if (!accountDetails.profiles.some(profile => profile.toString() === profileId)) throw "Something went wrong!";
+  if (!accountDetails.profiles.some(profile => profile.toString() === params.profileId)) throw "Something went wrong!";
 
-  const profile = await getProfileById(profileId);
+  const profile = await getProfileById(params.profileId);
 
+  delete params.profileId;
   // copy params to account and save
   object.merge(profile, params);
   profile.updated = Date.now();
