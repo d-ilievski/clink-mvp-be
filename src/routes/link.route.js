@@ -11,8 +11,10 @@ const {
     deleteLink,
 } = require("../controllers/link.controller");
 
-router.post("/link", authorize(), createLinkSchema, createLink);
-router.put("/link", authorize(), updateLinkSchema, updateLink);
-router.delete("/link", authorize(), deleteLinkSchema, deleteLink);
+router.post("/", authorize(), createLinkSchema, createLink);
+router.put("/", authorize(), updateLinkSchema, updateLink);
+router.delete("/", authorize(), deleteLinkSchema, deleteLink);
+
+// TODO create/add link in profile
 
 module.exports = router;

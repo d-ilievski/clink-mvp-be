@@ -1,14 +1,16 @@
 const Joi = require("joi");
+
 const validateRequest = require("../middleware/validate-request");
 const Role = require("../types/role.type");
+
 const linkService = require("../services/link.service");
 
 function createLinkSchema(req, res, next) {
     const schemaRules = {
+        type: Joi.string().required(),
         platform: Joi.string().required(),
-        url: Joi.string().required(),
-        description: Joi.string().empty(""),
-        active: Joi.boolean().default(true),
+        value: Joi.string().required(),
+        displayName: Joi.string(),
     };
 
     const schema = Joi.object(schemaRules);
@@ -22,7 +24,7 @@ function createLink(req, res, next) {
 
     linkService
         .createLink(req.user.id, req.body)
-        .then((account) => res.json(account))
+        .then((response) => res.json(response))
         .catch(next);
 }
 

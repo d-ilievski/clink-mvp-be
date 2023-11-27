@@ -1,18 +1,16 @@
 const db = require("../helpers/db");
 
+const LinkModel = require("../models/link.model");
+
 async function createLink(accountId, params) {
-    const profile = await getProfileByAccountId(accountId);
 
     const linkValues = {
         ...params,
-        profile: profile.id,
+        account: accountId,
     };
 
-    const link = new db.Link(linkValues);
+    const link = new LinkModel(linkValues);
     await link.save();
-
-    profile.links.push(link.id);
-    await profile.save();
 
     return link;
 }
@@ -50,34 +48,9 @@ async function deleteLink(accountId, params) {
 
 // DB Queries
 
-async function getProfileByAccountId(accountId) {
-    if (!db.isValidId(accountId)) throw "Profile not found";
-    const profile = await db.Profile.findOne({ account: accountId })
-        .populate({
-            path: "account",
-        })
-        .populate({
-            path: "links",
-        })
-        .populate({
-            path: "connections",
-            populate: {
-                path: "profile",
-                model: "Profile",
-                populate: {
-                    path: "account",
-                    model: "Account",
-                },
-            },
-        });
-
-    if (!profile) throw "Profile not found";
-    return profile;
-}
-
 async function getLinkById(id) {
     if (!db.isValidId(id)) throw "Link not found";
-    const link = await db.Link.findById(id);
+    const link = await LinkModel.findById(id);
     if (!link) throw "Link not found";
     return link;
 }
