@@ -1,21 +1,21 @@
-﻿const db = require("../helpers/db");
-const LinkPlatform = require("../types/link-platform.type");
+﻿const VCard = require('vcard-creator').default;
+const object = require('lodash/fp/object');
 
-const VCard = require('vcard-creator').default;
+const db = require("../helpers/db");
 
 const AccountDetailsModel = require("../models/account-details.model");
 const ProfileModel = require("../models/profile.model");
+const LinkModel = require("../models/link.model");
 
 const ProfilePrivateDto = require("../dto/profile-private.dto");
 const AccountDetailsPrivateDto = require("../dto/account-details-private.dto");
 const AccountDetailsPublicDto = require("../dto/account-details-public.dto");
 const ProfilePublicDto = require("../dto/profile-public.dto");
 
-var object = require('lodash/fp/object');
 const LinkType = require("../types/link-type.type");
+const LinkPlatform = require("../types/link-platform.type");
 
 // Services
-
 
 /**
  * Retrieves the active profile for a given account ID.
@@ -24,7 +24,7 @@ const LinkType = require("../types/link-type.type");
  * @returns {Promise<Object>} - The active profile and account details.
  */
 async function getActiveProfile(accountId) {
-  const accountDetails = await db.AccountDetails.findOne({ account: accountId });
+  const accountDetails = await AccountDetailsModel.findOne({ account: accountId });
   const profile = await getProfileById(accountDetails.activeProfile);
   return {
     accountDetails: new AccountDetailsPrivateDto(accountDetails),
@@ -42,7 +42,7 @@ async function getActiveProfile(accountId) {
  */
 async function updateProfile(accountId, profileId, params) {
   // prevent editing of other user's profiles
-  const accountDetails = await db.AccountDetails.findOne({ account: accountId });
+  const accountDetails = await AccountDetailsModel.findOne({ account: accountId });
   if (!accountDetails.profiles.some(profile => profile.toString() === profileId)) throw "Something went wrong!";
 
   const profile = await getProfileById(profileId);
@@ -63,7 +63,7 @@ async function updateProfile(accountId, profileId, params) {
  */
 async function getPublicProfile(profileId) {
   const profile = await getProfileById(profileId);
-  const accountDetails = await db.AccountDetails.findOne({ account: profile.account.id });
+  const accountDetails = await AccountDetailsModel.findOne({ account: profile.account.id });
 
   return {
     accountDetails: new AccountDetailsPublicDto(accountDetails, profile.profileSettings),
@@ -118,11 +118,11 @@ async function createProfile(accountId, params = {
     account: accountId,
     ...params,
   };
-  const profile = new db.Profile(initialValues);
+  const profile = new ProfileModel(initialValues);
   await profile.save();
 
   // save the profile in the list of user profiles
-  const accountDetails = await db.AccountDetails.findOne({ account: accountId });
+  const accountDetails = await AccountDetailsModel.findOne({ account: accountId });
   accountDetails.profiles.push(profile.id);
   await accountDetails.save();
 
@@ -207,7 +207,7 @@ async function downloadContact(profileId) {
   const profile = await getProfileById(profileId);
   if (!profile) throw "Profile not found";
   const accountDetails = await AccountDetailsModel.findOne({ account: profile.account.id });
-  const links = await db.Link.find({ account: profile.account.id });
+  const links = await LinkModel.find({ account: profile.account.id });
 
   const vCard = new VCard();
   vCard
@@ -262,7 +262,7 @@ async function downloadContact(profileId) {
 
 async function getProfileById(id) {
   if (!db.isValidId(id)) throw "Profile not found";
-  const profile = await db.Profile.findById(id)
+  const profile = await ProfileModel.findById(id)
     .populate({
       path: "account",
     })
