@@ -1,5 +1,5 @@
 ﻿const db = require("../helpers/db");
-const LinkType = require("../types/link.type");
+const LinkPlatform = require("../types/link-platform.type");
 
 const VCard = require('vcard-creator').default;
 
@@ -12,6 +12,7 @@ const AccountDetailsPublicDto = require("../dto/account-details-public.dto");
 const ProfilePublicDto = require("../dto/profile-public.dto");
 
 var object = require('lodash/fp/object');
+const LinkType = require("../types/link-type.type");
 
 // Services
 
@@ -206,6 +207,7 @@ async function downloadContact(profileId) {
   const profile = await getProfileById(profileId);
   if (!profile) throw "Profile not found";
   const accountDetails = await AccountDetailsModel.findOne({ account: profile.account.id });
+  const links = await db.Link.find({ account: profile.account.id });
 
   const vCard = new VCard();
   vCard
@@ -213,37 +215,40 @@ async function downloadContact(profileId) {
     .addJobtitle(profile.headline) // check if its not hidden in profile settings first
     .addNote(profile.description) // check if its not hidden in profile settings first
 
-  // TODO: Include links
-  // profile.links.forEach(link => {
-  //   if (link.active) {
+  links.forEach(link => {
+    if (link.active) {
 
-  //     switch (link.platform) {
-  //       case LinkType.CustomLink:
-  //         vCard.addURL(link.url);
-  //         break;
+      switch (link.type) {
+        case LinkType.Number:
+          if ([LinkPlatform.Mobile, LinkPlatform.PersonalPhone].includes(link.platform)) {
+            vCard.addPhoneNumber(link.value, 'CELL');
+          } else if (LinkPlatform.BusinessPhone) {
+            vCard.addPhoneNumber(link.value, 'WORK');
+          }
+          break;
 
-  //       case LinkType.Website:
-  //         vCard.addURL(link.url);
-  //         break;
+        case LinkType.Email:
+          vCard.addEmail(link.value);
+          break;
 
-  //       case LinkType.Mobile:
-  //         vCard.addPhoneNumber(link.url, 'CELL');
-  //         break;
+        case LinkType.Website:
+          vCard.addURL(link.value);
+          break;
 
-  //       case LinkType.BusinessPhone:
-  //         vCard.addPhoneNumber(link.url, 'WORK');
-  //         break;
+        case LinkType.SocialMedia:
+          vCard.addSocial(link.value, link.platform);
+          break;
 
-  //       case LinkType.PersonalPhone:
-  //         vCard.addPhoneNumber(link.url);
-  //         break;
+        case LinkType.Other:
+          // TODO: Pay special attention to this one
+          vCard.addSocial(link.value, link.platform);
+          break;
 
-  //       default:
-  //         vCard.addSocial(link.url, link.platform);
-  //         break;
-  //     }
-  //   }
-  // });
+        default:
+          break;
+      }
+    }
+  });
 
   const filename = `${accountDetails.firstName}${profile.profileSettings.showLastName ?
     '_' + accountDetails.lastName : ''}.vcf`;
@@ -272,106 +277,6 @@ async function getProfileById(id) {
     });
   if (!profile) throw "Profile not found";
   return profile;
-}
-
-async function getProfileByAccountId(accountId) {
-  if (!db.isValidId(accountId)) throw "Profile not found";
-  const profile = await ProfileModel.findOne({ account: accountId })
-    .populate({
-      path: "account",
-    })
-    .populate({
-      path: "links",
-      populate: {
-        path: "link",
-      },
-    })
-    .populate({
-      path: "profileSettings",
-    });
-
-  if (!profile) throw "Profile not found";
-  return profile;
-}
-
-async function getLinkById(id) {
-  if (!db.isValidId(id)) throw "Link not found";
-  const link = await db.Link.findById(id);
-  if (!link) throw "Link not found";
-  return link;
-}
-
-async function getAccountIdByProfileId(profileId) {
-  if (!db.isValidId(profileId)) throw "User not found";
-  const profile = await db.Profile.findById(profileId).populate({
-    path: "account",
-  });
-
-  if (!profile) throw "Account not found";
-  return profile.account.id; // id
-}
-
-// Transformers
-function publicProfile(profile) {
-  const { id, account, description, links } = profile;
-  const { firstName, lastName, title, handle, location } = account;
-  return {
-    id,
-    description,
-    links: links.reduce((reduced, link) => {
-      if (link.active) {
-        const { active, platform, url, id } = link;
-        reduced.push({ active, platform, url, id });
-      }
-      return reduced;
-    }, []),
-    account: {
-      firstName,
-      lastName,
-      handle,
-      title,
-      location,
-    },
-  };
-}
-
-function privateProfile(profile) {
-  const { id, account, description, links, connections } = profile;
-
-  const {
-    id: accountId,
-    title,
-    handle,
-    location,
-    firstName,
-    lastName,
-    email,
-  } = account;
-
-  const connectionsTransformed = connections.map(({ profile, date, id }) => ({
-    id,
-    accountId: profile.account.id,
-    firstName: profile.account.firstName,
-    lastName: profile.account.lastName,
-    title: profile.title,
-    date,
-  }));
-
-  return {
-    id,
-    description,
-    links,
-    connections: connectionsTransformed,
-    account: {
-      id: accountId,
-      title,
-      handle,
-      location,
-      firstName,
-      lastName,
-      email,
-    },
-  };
 }
 
 

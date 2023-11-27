@@ -33,8 +33,6 @@ const schema = new Schema({
     }
   ],
 
-  links: [{ type: Schema.Types.ObjectId, ref: "Link" }],
-
   created: { type: Date, default: Date.now },
   updated: Date,
 });
