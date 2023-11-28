@@ -1,5 +1,21 @@
-# node-mongo-signup-verification-api
+# Clink BE
 
-NodeJS + MongoDB - API with Email Sign Up, Verification, Authentication & Forgot Password
+## Description
 
-For documentation and instructions see https://jasonwatmore.com/post/2020/05/13/node-mongo-api-with-email-sign-up-verification-authentication-forgot-password
+A brief description of the project.
+
+## Installation
+
+Instructions on how to install and run the project.
+
+## Usage
+
+Instructions on how to use the project.
+
+## Contributing
+
+Guidelines on how to contribute to the project.
+
+## License
+
+Information about the project's license.
