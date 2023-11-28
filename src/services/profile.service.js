@@ -1,5 +1,4 @@
 ﻿const VCard = require('vcard-creator').default;
-const object = require('lodash/fp/object');
 
 const db = require("../helpers/db");
 
@@ -46,14 +45,15 @@ async function getActiveProfile(accountId) {
 async function updateProfile(accountId, params) {
   // prevent editing of other user's profiles
   const accountDetails = await AccountDetailsModel.findOne({ account: accountId });
-  if (!accountDetails.profiles.some(profile => profile.toString() === params.profileId)) throw "Something went wrong!";
+  if (!accountDetails.profiles.some(profile => profile.toString() === params.profileId)) throw "Unauthorized";
 
   const profile = await getProfileById(params.profileId);
 
-  delete params.profileId;
   // copy params to account and save
-  object.merge(profile, params);
+  delete params.profileId;
+  profile.set(params);
   profile.updated = Date.now();
+
   await profile.save();
 
   return new ProfilePrivateDto(profile);

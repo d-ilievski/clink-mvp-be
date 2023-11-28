@@ -5,6 +5,13 @@ const Role = require("../types/role.type");
 
 const linkService = require("../services/link.service");
 
+function getAllLinks(req, res, next) {
+    linkService
+        .getAllLinks(req.user.id)
+        .then((response) => res.json(response))
+        .catch(next);
+}
+
 function createLinkSchema(req, res, next) {
     const schemaRules = {
         type: Joi.string().required(),
@@ -18,10 +25,6 @@ function createLinkSchema(req, res, next) {
     validateRequest(req, next, schema);
 }
 function createLink(req, res, next) {
-    if (!req.user.id && req.user.role !== Role.Admin) {
-        return res.status(401).json({ message: "Unauthorized" });
-    }
-
     linkService
         .createLink(req.user.id, req.body)
         .then((response) => res.json(response))
@@ -30,10 +33,11 @@ function createLink(req, res, next) {
 
 function updateLinkSchema(req, res, next) {
     const schemaRules = {
-        id: Joi.string().required(),
-        platform: Joi.string().empty(""),
-        url: Joi.string().required(),
-        active: Joi.boolean(),
+        linkId: Joi.string().required(),
+        type: Joi.string(),
+        platform: Joi.string(),
+        value: Joi.string(),
+        displayName: Joi.string().allow(""),
     };
 
     const schema = Joi.object(schemaRules);
@@ -41,20 +45,15 @@ function updateLinkSchema(req, res, next) {
     validateRequest(req, next, schema);
 }
 function updateLink(req, res, next) {
-    // users can update their own account and admins can update any account
-    if (!req.user.id && req.user.role !== Role.Admin) {
-        return res.status(401).json({ message: "Unauthorized" });
-    }
-
     linkService
-        .updateLink(req.body)
-        .then((link) => res.json(link))
+        .updateLink(req.user.id, req.body)
+        .then((response) => res.json(response))
         .catch(next);
 }
 
 function deleteLinkSchema(req, res, next) {
     const schemaRules = {
-        id: Joi.string().required(),
+        linkId: Joi.string().required(),
     };
 
     const schema = Joi.object(schemaRules);
@@ -62,11 +61,6 @@ function deleteLinkSchema(req, res, next) {
     validateRequest(req, next, schema);
 }
 function deleteLink(req, res, next) {
-    // users can update their own account and admins can update any account
-    if (!req.user.id && req.user.role !== Role.Admin) {
-        return res.status(401).json({ message: "Unauthorized" });
-    }
-
     linkService
         .deleteLink(req.user.id, req.body)
         .then((account) => res.json(account))
@@ -74,6 +68,7 @@ function deleteLink(req, res, next) {
 }
 
 module.exports = {
+    getAllLinks,
     createLinkSchema,
     createLink,
     updateLinkSchema,

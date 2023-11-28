@@ -3,6 +3,7 @@ const router = express.Router();
 const authorize = require("../middleware/authorize");
 
 const {
+    getAllLinks,
     createLinkSchema,
     createLink,
     updateLinkSchema,
@@ -11,9 +12,10 @@ const {
     deleteLink,
 } = require("../controllers/link.controller");
 
-router.post("/", authorize(), createLinkSchema, createLink);
-router.put("/", authorize(), updateLinkSchema, updateLink);
-router.delete("/", authorize(), deleteLinkSchema, deleteLink);
+router.get("/all", authorize(), getAllLinks);
+router.post("/create", authorize(), createLinkSchema, createLink);
+router.put("/edit", authorize(), updateLinkSchema, updateLink);
+router.delete("/delete", authorize(), deleteLinkSchema, deleteLink);
 
 // TODO create/add link in profile
 
