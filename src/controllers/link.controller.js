@@ -63,7 +63,41 @@ function deleteLinkSchema(req, res, next) {
 function deleteLink(req, res, next) {
     linkService
         .deleteLink(req.user.id, req.body)
-        .then((account) => res.json(account))
+        .then((response) => res.json(response))
+        .catch(next);
+}
+
+function addLinkToProfileSchema(req, res, next) {
+    const schemaRules = {
+        linkId: Joi.string().required(),
+        profileId: Joi.string().required(),
+    };
+
+    const schema = Joi.object(schemaRules);
+
+    validateRequest(req, next, schema);
+}
+function addLinkToProfile(req, res, next) {
+    linkService
+        .addLinkToProfile(req.user.id, req.body)
+        .then((response) => res.json(response))
+        .catch(next);
+}
+
+function removeLinkFromProfileSchema(req, res, next) {
+    const schemaRules = {
+        linkId: Joi.string().required(),
+        profileId: Joi.string().required(),
+    };
+
+    const schema = Joi.object(schemaRules);
+
+    validateRequest(req, next, schema);
+}
+function removeLinkFromProfile(req, res, next) {
+    linkService
+        .removeLinkFromProfile(req.user.id, req.body)
+        .then((response) => res.json(response))
         .catch(next);
 }
 
@@ -75,4 +109,8 @@ module.exports = {
     updateLink,
     deleteLinkSchema,
     deleteLink,
+    addLinkToProfileSchema,
+    addLinkToProfile,
+    removeLinkFromProfileSchema,
+    removeLinkFromProfile,
 };

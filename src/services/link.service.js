@@ -87,6 +87,57 @@ async function deleteLink(accountId, params) {
     return deleteResult;
 }
 
+/**
+ * Adds a link to a profile.
+ * 
+ * @param {string} accountId - The ID of the account.
+ * @param {Object} params - The parameters for adding the link to the profile.
+ * @param {string} params.profileId - The ID of the profile.
+ * @param {string} params.linkId - The ID of the link.
+ * @returns {Promise<Object>} - The updated profile.
+ * @throws {string} - Throws an error if the profile is not found or if the user is unauthorized.
+ */
+async function addLinkToProfile(accountId, params) {
+    if (!db.isValidId(params.profileId)) throw "Profile not found."
+    // check if link and profile belong to account
+    const link = await LinkModel.findById(params.linkId);
+    const profile = await ProfileModel.findById(params.profileId);
+    if (profile.account.toString() !== accountId || link.account.toString() !== accountId) {
+        throw "Unauthorized";
+    }
+
+    // add link to profile
+    profile.links.push(link);
+    // return updated profile
+    return await profile.save();
+}
+
+/**
+ * Removes a link from a profile.
+ * 
+ * @param {string} accountId - The ID of the account.
+ * @param {object} params - The parameters containing the profile ID and link ID.
+ * @returns {Promise<object>} - The updated profile.
+ * @throws {string} - Throws an error if the profile is not found, unauthorized, or if the link is not found in the profile.
+ */
+async function removeLinkFromProfile(accountId, params) {
+    if (!db.isValidId(params.profileId)) throw "Profile not found."
+    // check if link and profile belong to account
+    const link = await LinkModel.findById(params.linkId);
+    const profile = await ProfileModel.findById(params.profileId);
+    if (profile.account.toString() !== accountId || link.account.toString() !== accountId) {
+        throw "Unauthorized";
+    }
+    // check if link is in profile
+    const linkIndex = profile.links.findIndex((l) => l._id.toString() === link._id.toString());
+    if (linkIndex === -1) throw "Link not found in profile";
+
+    // remove link from profile
+    profile.links.splice(linkIndex, 1);
+    // return updated profile
+    return await profile.save();
+}
+
 
 // DB Queries
 
@@ -102,4 +153,6 @@ module.exports = {
     createLink,
     updateLink,
     deleteLink,
+    addLinkToProfile,
+    removeLinkFromProfile,
 };
