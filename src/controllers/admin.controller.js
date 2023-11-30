@@ -5,6 +5,7 @@ const Role = require("../types/role.type");
 const accountService = require("../services/account.service");
 const adminService = require("../services/admin.service");
 const { nameRegex } = require("../helpers/validators");
+const TagType = require("../types/tag/tag-type.type");
 
 function getAll(req, res, next) {
   accountService
@@ -130,6 +131,19 @@ function deleteAccount(req, res, next) {
     .catch(next);
 }
 
+function createTagsSchema(req, res, next) {
+  const schema = Joi.object({
+    count: Joi.number().required(),
+    type: Joi.string().valid(...Object.values(TagType)).required(),
+  });
+  validateRequest(req, next, schema);
+}
+function createTags(req, res, next) {
+  adminService
+    .createTags(req.body)
+    .then((response) => res.json(response))
+    .catch(next);
+}
 
 module.exports = {
   getAll,
@@ -142,4 +156,6 @@ module.exports = {
   logoutSchema,
   logout,
   deleteAccount,
+  createTagsSchema,
+  createTags,
 };

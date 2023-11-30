@@ -8,6 +8,8 @@ const authorize = require("../middleware/authorize");
 
 const {
     deleteAccount,
+    createTagsSchema,
+    createTags,
 } = require("../controllers/admin.controller");
 
 
@@ -19,5 +21,7 @@ router.get("/delete-account", authorize(Role.Admin), deleteAccount);
 // router.get("/:id", authorize(), getById);
 // router.put("/:id", authorize(), updateSchema, update);
 // router.delete("/:id", authorize(), _delete);
+
+router.post("/tag/create", authorize(Role.Admin), createTagsSchema, createTags);
 
 module.exports = router;

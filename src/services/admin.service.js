@@ -1,4 +1,7 @@
 const db = require("../helpers/db");
+const TagModel = require("../models/tag.model");
+
+const { v4: uuidv4 } = require('uuid');
 
 async function getAll() {
     const accounts = await db.Account.find();
@@ -68,6 +71,19 @@ async function deleteAccount(id) {
     ]);
 }
 
+async function createTags(params) {
+    const tags = [];
+    for (let i = 0; i < params.count; i++) {
+        tags.push({
+            connectId: uuidv4(),
+            type: params.type,
+        });
+    }
+
+    const createdTags = await TagModel.create(tags);
+
+    return createdTags;
+}
 
 
 // helper functions
@@ -86,4 +102,5 @@ module.exports = {
     update,
     delete: _delete,
     deleteAccount,
+    createTags,
 }
