@@ -11,7 +11,7 @@ const schema = new Schema({
   active: { type: Boolean, required: true, default: true },
 
   created: { type: Date, default: Date.now },
-  updated: Date,
+  updated: { type: Date },
 });
 
 module.exports = mongoose.model("Link", schema);

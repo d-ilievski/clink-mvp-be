@@ -1,6 +1,23 @@
 const TagModel = require("../models/tag.model");
 const AccountDetailsModel = require("../models/account-details.model");
 
+async function getAllTags(accountId) {
+    const accountDetails = await AccountDetailsModel.findOne({ account: accountId }).populate('tags');
+
+    const tags = accountDetails.tags.map((tag) => {
+        return {
+            id: tag._id,
+            connectId: tag.connectId,
+            type: tag.type,
+            active: tag.active,
+            claimDate: tag.claimDate,
+        }
+    });
+
+    return tags;
+}
+
+
 /**
  * Retrieves the active profile information based on the provided connectId and user.
  * If the tag is claimed, then the active profile id is returned.
@@ -8,12 +25,12 @@ const AccountDetailsModel = require("../models/account-details.model");
  * -- If the user is logged in, then the user is taken to claim the tag.
  * -- Else If the user is not logged in, then the user is taken to login/register with the tag.
  * 
- * @param {string} connectId - The connectId to search for.
- * @param {object} user - The user object.
- * @returns {Promise<object>} The active profile information.
+ * @param {string} accountId - The ID of the account.
+ * @param {string} connectId - The connect ID of the tag.
+ * @returns {Promise<Object>} The active profile information.
  * @throws {string} Throws an error if the tag is not found.
  */
-async function getActiveProfileByTag(connectId, user) {
+async function getActiveProfileByTag(accountId, connectId) {
     const tag = await TagModel.findOne({ connectId });
     if (!tag) {
         throw "Tag not found";
@@ -31,7 +48,7 @@ async function getActiveProfileByTag(connectId, user) {
         };
     } else {
         // if the tag is not claimed, then check if the user is logged in
-        if (user) {
+        if (accountId) {
             // if the user is logged in, then take them to claim the tag
             return {
                 claimed: false,
@@ -49,7 +66,15 @@ async function getActiveProfileByTag(connectId, user) {
     }
 }
 
-async function claimTag(user, connectId) {
+/**
+ * Claims a tag for a user.
+ * 
+ * @param {Object} accountId - The user's account id.
+ * @param {string} connectId - The connectId of the tag to be claimed.
+ * @returns {Promise<Object>} - A promise that resolves to an object with the claimed status, profileId, and claimTag flag.
+ * @throws {string} - Throws an error if the tag is not found or already claimed.
+ */
+async function claimTag(accountId, connectId) {
     const tag = await TagModel.findOne({ connectId });
     if (!tag) {
         throw "Tag not found";
@@ -58,9 +83,9 @@ async function claimTag(user, connectId) {
         throw "Tag already claimed";
     }
 
-    const accountDetails = await AccountDetailsModel.findOne({ account: user.id });
+    const accountDetails = await AccountDetailsModel.findOne({ account: accountId });
 
-    tag.account = user.id;
+    tag.account = accountId;
     accountDetails.tags.push(tag);
 
     tag.updated = Date.now();
@@ -77,11 +102,36 @@ async function claimTag(user, connectId) {
     };
 }
 
-function toggleTag() {
-    return true;
+/**
+ * Toggles the active state of a tag.
+ * 
+ * @param {Object} accountId - The user object.
+ * @param {Object} params - The parameters object.
+ * @param {string} params.id - The ID of the tag.
+ * @param {boolean} params.active - The new active state of the tag.
+ * @returns {Promise<Object>} - The updated tag object.
+ * @throws {string} - If the tag is not found or the user is unauthorized.
+ */
+async function toggleTag(accountId, params) {
+    const tag = await TagModel.findById(params.id);
+    if (!tag) {
+        throw "Tag not found";
+    }
+    // check if the tag belongs to the user
+    const accountDetails = await AccountDetailsModel.findOne({ account: accountId });
+    if (!accountDetails.tags.includes(tag.id)) {
+        throw "Unauthorized";
+    }
+
+    tag.active = params.active;
+    tag.updated = Date.now();
+    await tag.save();
+
+    return tag;
 }
 
 module.exports = {
+    getAllTags,
     getActiveProfileByTag,
     claimTag,
     toggleTag,

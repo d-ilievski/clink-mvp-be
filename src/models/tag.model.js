@@ -8,7 +8,7 @@ const schema = new Schema({
   active: { type: Boolean, required: true, default: true },
   claimDate: { type: Date, default: null },
   created: { type: Date, default: Date.now },
-  updated: Date,
+  updated: { type: Date },
 });
 
 schema.virtual("isClaimed").get(function () {
