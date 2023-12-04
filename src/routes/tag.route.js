@@ -6,6 +6,7 @@ const optionallyAuthorize = require("../middleware/optionally-authorize");
 
 const {
     getActiveProfileByTag,
+    claimTagSchema,
     claimTag,
     toggleTag
 } = require("../controllers/tag.controller");
@@ -14,10 +15,10 @@ const {
 // get the current user's profile connected by the tag
 // if no profile is connected, then take them to claim the tag
 // TODO: Current profile per tag ?
-router.get("/:id", optionallyAuthorize(), getActiveProfileByTag);
+router.get("/:connectId", optionallyAuthorize(), getActiveProfileByTag);
 
-// claim the tag by id
-router.get("/claim/:id", authorize(), claimTag);
+// claim the tag by connect id
+router.post("/claim", authorize(), claimTagSchema, claimTag);
 
 // toggle the tag's active status
 router.put("/toggle/:id", authorize(), toggleTag);

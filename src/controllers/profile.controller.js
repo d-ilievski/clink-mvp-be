@@ -53,7 +53,6 @@ function getAllProfiles(req, res, next) {
     .getAllProfiles(req.user.id)
     .then((response) => (response.profiles.length ? res.json(response) : res.sendStatus(404)))
     .catch(next);
-  return true;
 }
 
 function createProfileSchema(req, res, next) {
@@ -70,7 +69,6 @@ function createProfile(req, res, next) {
     .createProfile(req.user.id, req.body)
     .then((response) => (response ? res.json(response) : res.sendStatus(404)))
     .catch(next);
-  return true;
 }
 
 function connectProfileSchema(req, res, next) {
