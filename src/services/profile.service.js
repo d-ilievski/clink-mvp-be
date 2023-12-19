@@ -7,8 +7,6 @@ const ProfileModel = require("../models/profile.model");
 const LinkModel = require("../models/link.model");
 
 const ProfilePrivateDto = require("../dto/profile-private.dto");
-const AccountDetailsPrivateDto = require("../dto/account-details-private.dto");
-const AccountDetailsPublicDto = require("../dto/account-details-public.dto");
 const ProfilePublicDto = require("../dto/profile-public.dto");
 
 const LinkType = require("../types/link-type.type");
@@ -131,7 +129,6 @@ async function createProfile(accountId, params = {
   await accountDetails.save();
 
   return {
-    accountDetails: new AccountDetailsPrivateDto(accountDetails),
     ...new ProfilePrivateDto(profile),
   };
 }

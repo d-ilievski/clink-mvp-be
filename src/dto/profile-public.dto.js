@@ -17,7 +17,7 @@ class ProfilePublicDto {
             profileSettings,
         };
 
-        const accountDetailsDto = accountDetails.firstName ? new AccountDetailsPublicDto(accountDetails) : null;
+        const accountDetailsDto = accountDetails.firstName ? new AccountDetailsPublicDto(accountDetails, profileSettings) : null;
 
         if (accountDetailsDto) {
             payload.accountDetails = accountDetailsDto;
