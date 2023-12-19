@@ -26,7 +26,6 @@ async function getActiveProfile(accountId) {
   const accountDetails = await AccountDetailsModel.findOne({ account: accountId });
   const profile = await getProfileById(accountDetails.activeProfile);
   return {
-    accountDetails: new AccountDetailsPrivateDto(accountDetails),
     ...new ProfilePrivateDto(profile)
   }
 }
@@ -67,10 +66,8 @@ async function updateProfile(accountId, params) {
  */
 async function getPublicProfile(profileId) {
   const profile = await getProfileById(profileId);
-  const accountDetails = await AccountDetailsModel.findOne({ account: profile.account.id });
 
   return {
-    accountDetails: new AccountDetailsPublicDto(accountDetails, profile.profileSettings),
     ...new ProfilePublicDto(profile)
   }
 }
@@ -117,16 +114,19 @@ async function createProfile(accountId, params = {
   title: "",
   description: "",
 }) {
+  // check if there's accountDetails available for this account
+  const accountDetails = await AccountDetailsModel.findOne({ account: accountId });
+
   // create the profile with the constructed initial values
   const initialValues = {
     account: accountId,
+    accountDetails: accountDetails ? accountDetails.id : null,
     ...params,
   };
   const profile = new ProfileModel(initialValues);
   await profile.save();
 
   // save the profile in the list of user profiles
-  const accountDetails = await AccountDetailsModel.findOne({ account: accountId });
   accountDetails.profiles.push(profile.id);
   await accountDetails.save();
 
@@ -210,12 +210,11 @@ async function connectAnonymousProfile(params) {
 async function downloadContact(profileId) {
   const profile = await getProfileById(profileId);
   if (!profile) throw "Profile not found";
-  const accountDetails = await AccountDetailsModel.findOne({ account: profile.account.id });
   const links = await LinkModel.find({ account: profile.account.id });
 
   const vCard = new VCard();
   vCard
-    .addName(profile.profileSettings.showLastName ? accountDetails.lastName : undefined, accountDetails.firstName)
+    .addName(profile.profileSettings.showLastName ? profile.accountDetails.lastName : undefined, profile.accountDetails.firstName)
     .addJobtitle(profile.headline) // check if its not hidden in profile settings first
     .addNote(profile.description) // check if its not hidden in profile settings first
 
@@ -254,8 +253,8 @@ async function downloadContact(profileId) {
     }
   });
 
-  const filename = `${accountDetails.firstName}${profile.profileSettings.showLastName ?
-    '_' + accountDetails.lastName : ''}.vcf`;
+  const filename = `${profile.accountDetails.firstName}${profile.profileSettings.showLastName ?
+    '_' + profile.accountDetails.lastName : ''}.vcf`;
   return {
     filename,
     vCard: vCard.toString(),
@@ -278,6 +277,9 @@ async function getProfileById(id) {
     })
     .populate({
       path: "profileSettings",
+    })
+    .populate({
+      path: "accountDetails",
     });
   if (!profile) throw "Profile not found";
   return profile;

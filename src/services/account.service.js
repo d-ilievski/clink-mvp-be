@@ -47,7 +47,7 @@ async function authenticate({ email, password, ipAddress }) {
 
   const accountDetails =
     await AccountDetailsModel.findById(account.accountDetails)
-      .populate("profile")
+      .populate("activeProfile")
       .populate({
         path: "profiles",
         select: "type",
@@ -157,8 +157,6 @@ async function register(params, origin, ipAddress) {
 
     // save account
     await account.save();
-
-
 
     // create account details
     accountDetails = await accountDetailsService.createAccountDetails(account, params);

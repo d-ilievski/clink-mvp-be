@@ -3,6 +3,7 @@ const Schema = mongoose.Schema;
 
 const schema = new Schema({
   account: { type: Schema.Types.ObjectId, ref: "Account" },
+  accountDetails: { type: Schema.Types.ObjectId, ref: "AccountDetails" },
 
   type: { type: String, required: true, default: "personal" },
   headline: { type: String, required: false, default: "" },

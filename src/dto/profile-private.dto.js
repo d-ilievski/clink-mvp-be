@@ -1,8 +1,12 @@
+const AccountDetailsPrivateDto = require("./account-details-private.dto");
+
 class ProfilePrivateDto {
 
     #transformData(data) {
         // destructuring
-        const { id, account, type, headline, description, links, profileSettings } = data;
+        const { id, account, type, headline, description, links, profileSettings, accountDetails } = data;
+
+
 
         const {
             // id: accountId,
@@ -11,7 +15,7 @@ class ProfilePrivateDto {
             isVerified,
         } = account;
 
-        return {
+        const payload = {
             id,
             account: {
                 // id: accountId, // might not need this
@@ -25,11 +29,19 @@ class ProfilePrivateDto {
             links,
             profileSettings,
         };
+
+        const accountDetailsDto = accountDetails.firstName ? new AccountDetailsPrivateDto(accountDetails) : null;
+
+        if (accountDetailsDto) {
+            payload.accountDetails = accountDetailsDto;
+        }
+
+        return payload;
     }
 
     constructor(data) {
 
-        const { id, account, type, headline, description, links, profileSettings } = this.#transformData(data);
+        const { id, account, type, headline, description, links, profileSettings, accountDetails } = this.#transformData(data);
 
         // assign
         this.id = id;
@@ -44,6 +56,7 @@ class ProfilePrivateDto {
         this.description = description;
         this.links = links;
         this.profileSettings = profileSettings;
+        this.accountDetails = accountDetails;
     }
 }
 
