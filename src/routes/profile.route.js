@@ -1,7 +1,6 @@
 const express = require("express");
 const router = express.Router();
 const authorize = require("../middleware/authorize");
-const optionallyAuthorize = require("../middleware/optionally-authorize");
 
 const {
     getActiveProfile,
@@ -17,6 +16,8 @@ const {
     connectAnonymousProfile,
     downloadContactSchema,
     downloadContact,
+    setActiveProfileSchema,
+    setActiveProfile
 } = require("../controllers/profile.controller");
 
 // get active profile
@@ -37,5 +38,7 @@ router.post("/connect", authorize(), connectProfileSchema, connectProfile);
 router.post("/connect-anonymous", connectAnonymousProfileSchema, connectAnonymousProfile);
 // save to contacts
 router.post("/download-contact", downloadContactSchema, downloadContact);
+// set active profile
+router.post("/set-active", authorize(), setActiveProfileSchema, setActiveProfile);
 
 module.exports = router;

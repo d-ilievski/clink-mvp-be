@@ -1,4 +1,5 @@
-const AccountDetails = require("../models/account-details.model");
+const AccountDetailsModel = require("../models/account-details.model");
+const AccountDetailsPrivateDto = require("../dto/account-details-private.dto");
 
 /**
  * Creates an account details object for the given account and profile.
@@ -25,7 +26,7 @@ async function createAccountDetails(account, params) {
             activeProfile: null,
         };
 
-        const accountDetails = new AccountDetails(initialValues);
+        const accountDetails = new AccountDetailsModel(initialValues);
 
         await accountDetails.save();
 
@@ -35,6 +36,50 @@ async function createAccountDetails(account, params) {
     }
 }
 
+/**
+ * Updates the active profile for a given account.
+ * Used in profile controller.
+ * 
+ * @param {string} accountId - The ID of the account.
+ * @param {object} params - The parameters for updating the active profile.
+ * @param {string} params.profileId - The ID of the profile to set as active.
+ * @returns {Promise<AccountDetailsPrivateDto>} The updated account details with the active profile.
+ * @throws {string} If the user is unauthorized to update the active profile.
+ */
+async function updateActiveProfile(accountId, params) {
+
+    try {
+        const accountDetails = await AccountDetailsModel.findOne({ account: accountId }, { "connections": { $slice: -5 }, "anonymousConnections": { $slice: -5 } });
+
+        if (!accountDetails.profiles.some(profile => profile.toString() === params.profileId)) {
+            throw "Unauthorized.";
+        }
+
+        accountDetails.activeProfile = params.profileId;
+
+        await accountDetails.save();
+
+        await accountDetails
+            .populate("activeProfile")
+            .populate("profiles")
+            .populate("tags")
+            .populate({
+                path: "connections",
+                populate: {
+                    path: "profile",
+                    populate: 'accountDetails'
+                }
+            })
+            .populate({ path: "anonymousConnections" })
+            .execPopulate();
+
+        return new AccountDetailsPrivateDto(accountDetails);
+    } catch (error) {
+        throw error;
+    }
+}
+
 module.exports = {
     createAccountDetails,
+    updateActiveProfile,
 };

@@ -3,6 +3,7 @@
 const Joi = require("joi");
 const validateRequest = require("../middleware/validate-request");
 const profileService = require("../services/profile.service");
+const accountDetailsService = require("../services/account-details.service");
 
 function getActiveProfile(req, res, next) {
   profileService
@@ -129,6 +130,23 @@ function downloadContact(req, res, next) {
     .catch(next);
 }
 
+function setActiveProfileSchema(req, res, next) {
+  const schemaRules = {
+    profileId: Joi.string().required(),
+  };
+  const schema = Joi.object(schemaRules);
+
+  validateRequest(req, next, schema);
+}
+function setActiveProfile(req, res, next) {
+  accountDetailsService
+    .updateActiveProfile(req.user.id, req.body)
+    .then((response) =>
+      response ? res.json(response) : res.sendStatus(404)
+    )
+    .catch(next);
+}
+
 module.exports = {
   getPublicProfile,
   getActiveProfile,
@@ -143,4 +161,6 @@ module.exports = {
   connectAnonymousProfile,
   downloadContactSchema,
   downloadContact,
+  setActiveProfileSchema,
+  setActiveProfile,
 };

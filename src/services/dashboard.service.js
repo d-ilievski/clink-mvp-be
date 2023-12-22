@@ -1,8 +1,8 @@
 ﻿const AccountDetailsModel = require("../models/account-details.model");
-const DashboardDto = require("../dto/dashboard.dto");
+const AccountDetailsPrivateDto = require("../dto/account-details-private.dto");
 
 async function getDashboard(accountId) {
-  const accountDetails = await AccountDetailsModel.findOne({ account: accountId })
+  const accountDetails = await AccountDetailsModel.findOne({ account: accountId }, { "connections": { $slice: -5 }, "anonymousConnections": { $slice: -5 } })
     .populate("activeProfile")
     .populate("profiles")
     .populate("tags")
@@ -16,7 +16,7 @@ async function getDashboard(accountId) {
     .populate({ path: "anonymousConnections" })
 
   return {
-    ...new DashboardDto(accountDetails),
+    ...new AccountDetailsPrivateDto(accountDetails),
   };
 }
 
