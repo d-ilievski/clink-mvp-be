@@ -1,17 +1,12 @@
 const TagModel = require("../models/tag.model");
 const AccountDetailsModel = require("../models/account-details.model");
+const TagDto = require("../dto/tag.dto");
 
 async function getAllTags(accountId) {
     const accountDetails = await AccountDetailsModel.findOne({ account: accountId }).populate('tags');
 
     const tags = accountDetails.tags.map((tag) => {
-        return {
-            id: tag._id,
-            connectId: tag.connectId,
-            type: tag.type,
-            active: tag.active,
-            claimDate: tag.claimDate,
-        }
+        return new TagDto(tag);
     });
 
     return tags;
@@ -127,7 +122,7 @@ async function toggleTag(accountId, params) {
     tag.updated = Date.now();
     await tag.save();
 
-    return tag;
+    return new TagDto(tag);
 }
 
 module.exports = {

@@ -14,6 +14,8 @@ class AccountDetailsPrivateDto {
         this.anonymousConnections = data.anonymousConnections;
         this.links = data.links;
         this.profiles = data.profiles.map(profile => new ProfilePublicDto(profile));
+        this.totalConnections = data.totalConnections;
+        this.totalAnonymousConnections = data.totalAnonymousConnections;
     }
 }
 

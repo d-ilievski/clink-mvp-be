@@ -11,8 +11,8 @@ class ProfilePublicDto {
         const payload = {
             id,
             type,
-            headline: profileSettings.showHeadline ? headline : null,
-            description: profileSettings.showDescription ? description : null,
+            headline: profileSettings?.showHeadline ? headline : null,
+            description: profileSettings?.showDescription ? description : null,
             links: activeLinks,
             profileSettings,
         };

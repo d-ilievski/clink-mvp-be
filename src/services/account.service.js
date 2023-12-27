@@ -48,12 +48,16 @@ async function authenticate({ email, password, ipAddress }) {
   const accountDetails =
     await AccountDetailsModel.findById(account.accountDetails)
       .populate("activeProfile")
-      .populate({
-        path: "profiles",
-        select: "type",
-      })
+      .populate("profiles")
       .populate("tags")
-      .populate("connections")
+      .populate({
+        path: "connections",
+        populate: {
+          path: "profile",
+          populate: 'accountDetails'
+        }
+      })
+      .populate({ path: "anonymousConnections" })
 
   // return basic details and tokens
   return {

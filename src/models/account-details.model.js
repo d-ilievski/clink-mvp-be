@@ -37,4 +37,12 @@ const schema = new Schema({
   updated: Date,
 });
 
+schema.virtual("totalConnections").get(function () {
+  return this.connections.length;
+});
+
+schema.virtual("totalAnonymousConnections").get(function () {
+  return this.anonymousConnections.length;
+});
+
 module.exports = mongoose.model("AccountDetails", schema);
