@@ -175,7 +175,7 @@ async function register(params, origin, ipAddress) {
     await accountDetails.save();
 
     // fill in the account details with the active profile object
-    await accountDetails.populate("activeProfile");
+    await accountDetails.populate("activeProfile").execPopulate();
 
     // authentication successful so generate jwt and refresh tokens
     const jwtToken = generateJwtToken(account);

@@ -19,7 +19,10 @@ async function getAllConnections(accountId) {
                 }
             });
 
-        return accountDetails.connections.map(connection => new ConnectionDto(connection));
+        return {
+            connections: accountDetails.connections.map(connection => new ConnectionDto(connection)),
+            anonymousConnections: accountDetails.anonymousConnections
+        };
     } catch (error) {
         throw error;
     }

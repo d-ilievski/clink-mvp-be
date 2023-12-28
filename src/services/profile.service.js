@@ -21,10 +21,16 @@ const LinkPlatform = require("../types/link-platform.type");
  * @returns {Promise<Object>} - The active profile and account details.
  */
 async function getActiveProfile(accountId) {
-  const accountDetails = await AccountDetailsModel.findOne({ account: accountId });
-  const profile = await getProfileById(accountDetails.activeProfile);
+  const accountDetails = await AccountDetailsModel.findOne({ account: accountId })
+    .populate({
+      path: "activeProfile",
+      populate: {
+        path: "accountDetails",
+      },
+    });
+
   return {
-    ...new ProfilePrivateDto(profile)
+    ...new ProfilePrivateDto(accountDetails.profile)
   }
 }
 

@@ -3,21 +3,18 @@ const AccountDetailsPublicDto = require("./account-details-public.dto");
 class ProfilePublicDto {
 
     #transformData(data) {
-        // destructuring
-        const { id, type, headline, description, links, profileSettings, accountDetails } = data;
-
-        const activeLinks = links?.filter(link => link.active);
+        const activeLinks = data?.links?.filter(link => link.active);
 
         const payload = {
-            id,
-            type,
-            headline: profileSettings?.showHeadline ? headline : null,
-            description: profileSettings?.showDescription ? description : null,
-            links: activeLinks,
-            profileSettings,
+            id: data?.id || null,
+            type: data?.type || null,
+            headline: data?.profileSettings?.showHeadline ? data.headline : null,
+            description: data?.profileSettings?.showDescription ? data.description : null,
+            links: activeLinks || null,
+            profileSettings: data?.profileSettings || null,
         };
 
-        const accountDetailsDto = accountDetails.firstName ? new AccountDetailsPublicDto(accountDetails, profileSettings) : null;
+        const accountDetailsDto = data?.accountDetails?.firstName ? new AccountDetailsPublicDto(data?.accountDetails, data?.profileSettings) : null;
 
         if (accountDetailsDto) {
             payload.accountDetails = accountDetailsDto;

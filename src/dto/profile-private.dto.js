@@ -3,34 +3,22 @@ const AccountDetailsPrivateDto = require("./account-details-private.dto");
 class ProfilePrivateDto {
 
     #transformData(data) {
-        // destructuring
-        const { id, account, type, headline, description, links, profileSettings, accountDetails } = data;
-
-
-
-        const {
-            // id: accountId,
-            email,
-            role,
-            isVerified,
-        } = account;
-
         const payload = {
-            id,
+            id: data?.id || null,
             account: {
                 // id: accountId, // might not need this
-                email,
-                role,
-                isVerified,
+                email: data?.account?.email,
+                role: data?.account?.role,
+                isVerified: data?.account?.isVerified,
             },
-            type,
-            headline,
-            description,
-            links,
-            profileSettings,
+            type: data?.type || null,
+            headline: data?.headline,
+            description: data?.description,
+            links: data?.links || null,
+            profileSettings: data?.profileSettings,
         };
 
-        const accountDetailsDto = accountDetails.firstName ? new AccountDetailsPrivateDto(accountDetails) : null;
+        const accountDetailsDto = data?.accountDetails?.firstName ? new AccountDetailsPrivateDto(data?.accountDetails) : null;
 
         if (accountDetailsDto) {
             payload.accountDetails = accountDetailsDto;
