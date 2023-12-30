@@ -38,11 +38,11 @@ const schema = new Schema({
 });
 
 schema.virtual("totalConnections").get(function () {
-  return this.connections.length;
+  return this.connections?.length || null;
 });
 
 schema.virtual("totalAnonymousConnections").get(function () {
-  return this.anonymousConnections.length;
+  return this.anonymousConnections?.length || null;
 });
 
 module.exports = mongoose.model("AccountDetails", schema);

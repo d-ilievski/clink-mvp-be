@@ -26,11 +26,19 @@ async function getActiveProfile(accountId) {
       path: "activeProfile",
       populate: {
         path: "accountDetails",
+        select: "-activeProfile -tags -connections -anonymousConnections -totalConnections -totalAnonymousConnections",
+        populate: {
+          path: "profiles",
+          populate: {
+            path: "links",
+          },
+        },
       },
+
     });
 
   return {
-    ...new ProfilePrivateDto(accountDetails.profile)
+    ...new ProfilePrivateDto(accountDetails.activeProfile)
   }
 }
 
