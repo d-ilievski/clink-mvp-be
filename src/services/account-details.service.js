@@ -79,7 +79,39 @@ async function updateActiveProfile(accountId, params) {
     }
 }
 
+async function updateAccountDetails(accountId, params) {
+
+    try {
+        const accountDetails = await AccountDetailsModel.findOne({ account: accountId }, { "connections": { $slice: -5 }, "anonymousConnections": { $slice: -5 } });
+
+        if (params.firstName) accountDetails.firstName = params.firstName;
+        if (params.lastName) accountDetails.lastName = params.lastName;
+        if (params.location) accountDetails.location = params.location;
+
+        await accountDetails.save();
+
+        await accountDetails
+            .populate("activeProfile")
+            .populate("profiles")
+            .populate("tags")
+            .populate({
+                path: "connections",
+                populate: {
+                    path: "profile",
+                    populate: 'accountDetails'
+                }
+            })
+            .populate({ path: "anonymousConnections" })
+            .execPopulate();
+
+        return new AccountDetailsPrivateDto(accountDetails);
+    } catch (error) {
+        throw error;
+    }
+}
+
 module.exports = {
     createAccountDetails,
     updateActiveProfile,
+    updateAccountDetails,
 };

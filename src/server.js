@@ -27,6 +27,7 @@ app.use("/api/link", require("./routes/link.route"));
 app.use("/api/tag", require("./routes/tag.route"));
 app.use("/api/dashboard", require("./routes/dashboard.route"));
 app.use("/api/connection", require("./routes/connection.route"));
+app.use("/api/account-details", require("./routes/account-details.route"));
 // TODO Remove
 app.use("/api/admin", require("./routes/admin.route"));
 
